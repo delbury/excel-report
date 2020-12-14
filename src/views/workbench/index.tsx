@@ -2,11 +2,17 @@ import React from 'react';
 import { Layout, Upload, Button } from 'antd';
 import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
 import { UploadOutlined } from '@ant-design/icons';
+import { connect, DispatchProp } from 'react-redux';
+import { Dispatch } from 'redux';
+import { showGlobalProgress, hideGlobalProgress } from '@/redux/actions/global';
+import { StoreState } from '@/redux'
 import XLSX from 'xlsx';
 
 const { Content } = Layout;
 
-interface Props {}
+interface Props {
+  loading: boolean;
+}
 interface State {
   fileList: any[]
 }
@@ -58,12 +64,17 @@ class Workbench extends React.Component<Props, State> {
   // 清除文件
   clearFile = () => {}
 
+  // 测试
+  handleTest = () => {
+  }
+
   render() {
+    console.log(this.props.loading)
     return (
       <Layout className="workbench">
         <Content className="workbench-content">
           <div className="workbench-operation">
-            <div className="row">
+            <div className="col">
               <Upload
                 { ...uploadConfig }
                 fileList={this.state.fileList}
@@ -73,6 +84,9 @@ class Workbench extends React.Component<Props, State> {
                 <Button icon={<UploadOutlined />}>选择本地文件</Button>
               </Upload>
             </div>
+            <div className="col">
+              <Button onClick={this.handleTest}>测试</Button>
+            </div>
           </div>
           <div className="workbench-preview"></div>
         </Content>
@@ -81,4 +95,17 @@ class Workbench extends React.Component<Props, State> {
   }
 }
 
-export default Workbench;
+const stateToProps = (state: StoreState) => ({
+  loading: state.global.showProgress,
+});
+const dispatchToProps = (dispatch: Dispatch) => {
+  return {
+    showProgress() {
+      dispatch(showGlobalProgress());
+    },
+    hideProgress() {
+      dispatch(hideGlobalProgress());
+    },
+  };
+};
+export default connect(stateToProps, dispatchToProps)(Workbench);

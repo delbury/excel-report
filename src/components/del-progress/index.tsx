@@ -4,11 +4,13 @@ import style from './style.module.scss';
 
 type ProgressStatuses = 'normal'| 'exception' | 'active' | 'success';
 
-const DelProgress = function() {
+const DelProgress: React.FC = function() {
   const defaultStatus: ProgressStatuses = 'normal';
   const [show, setShow] = useState(true);
   const [percent, setPercent] = useState(50);
   const [status, setStatus] = useState(defaultStatus);
+
+  console.log(show);
 
   return (
     <div
