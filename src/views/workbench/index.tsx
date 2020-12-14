@@ -2,16 +2,19 @@ import React from 'react';
 import { Layout, Upload, Button } from 'antd';
 import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
 import { UploadOutlined } from '@ant-design/icons';
-import { connect, DispatchProp } from 'react-redux';
-import { Dispatch } from 'redux';
-import { showGlobalProgress, hideGlobalProgress } from '@/redux/actions/global';
-import { StoreState } from '@/redux'
-import XLSX from 'xlsx';
+import { connect } from 'react-redux';
+import { Dispatch, bindActionCreators } from 'redux';
+import { actions } from '@/redux/actions/global';
+import { StoreState } from '@/redux';
+import XLSX, { WorkBook } from 'xlsx';
 
 const { Content } = Layout;
 
 interface Props {
+  percent: number;
   loading: boolean;
+  toggleProgress: (status?: boolean) => void;
+  setPercent: (percent: number) => void;
 }
 interface State {
   fileList: any[]
@@ -53,23 +56,23 @@ class Workbench extends React.Component<Props, State> {
 
     const fileReader: FileReader = new FileReader();
     fileReader.onprogress = ev => {
-      console.log(ev);
+      const percent: number = (ev.loaded / ev.total) * 100;
+      this.props.setPercent(percent);
     };
     fileReader.onload = ev => {
-      console.log('end');
+      const workbook: WorkBook = XLSX.read(fileReader.result, { type: 'array' });
+
+      console.log(workbook);
     };
     fileReader.readAsArrayBuffer(file);
+    this.props.setPercent(0);
+    this.props.toggleProgress(true);
   }
 
   // 清除文件
   clearFile = () => {}
 
-  // 测试
-  handleTest = () => {
-  }
-
   render() {
-    console.log(this.props.loading)
     return (
       <Layout className="workbench">
         <Content className="workbench-content">
@@ -85,7 +88,6 @@ class Workbench extends React.Component<Props, State> {
               </Upload>
             </div>
             <div className="col">
-              <Button onClick={this.handleTest}>测试</Button>
             </div>
           </div>
           <div className="workbench-preview"></div>
@@ -97,15 +99,12 @@ class Workbench extends React.Component<Props, State> {
 
 const stateToProps = (state: StoreState) => ({
   loading: state.global.showProgress,
+  percent: state.global.percent,
 });
 const dispatchToProps = (dispatch: Dispatch) => {
   return {
-    showProgress() {
-      dispatch(showGlobalProgress());
-    },
-    hideProgress() {
-      dispatch(hideGlobalProgress());
-    },
+    toggleProgress: (status?: boolean) => dispatch(actions.toggleGlobalProgress(status)),
+    setPercent: (percent: number) => dispatch(actions.setGlobalProgressPercent(percent)),
   };
 };
 export default connect(stateToProps, dispatchToProps)(Workbench);

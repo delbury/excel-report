@@ -1,30 +1,32 @@
 import {
-  GLOBAL_SHOW_PROGRESS,
-  GLOBAL_HIDE_PROGRESS,
-  GLOBAL_ACTION_TYPE,
+  CONST,
   GlobalAction,
 } from '@/redux/actions/global';
 
 export interface InitState {
   showProgress: boolean;
+  percent: number;
 }
 
 const initState: InitState = {
-  showProgress: true,
+  showProgress: false,
+  percent: 0,
 };
 
 const globalReducer = function(state: InitState = initState, action: GlobalAction): InitState {
   switch(action.type) {
-    case GLOBAL_SHOW_PROGRESS:
+    case CONST.GLOBAL_TOGGLE_PROGRESS:
       return {
         ...state,
-        showProgress: true,
+        showProgress: action.payload.show !== undefined ? action.payload.show : !state.showProgress
       };
 
-    case GLOBAL_HIDE_PROGRESS:
+    case CONST.GLOBAL_SET_PERCENT:
+      let percent = action.payload.percent ?? 0;
+      percent = percent < 0 ? 0 : percent > 100 ? 100 : percent;
       return {
         ...state,
-        showProgress: false,
+        percent,
       };
 
     default:
