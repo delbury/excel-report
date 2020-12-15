@@ -1,8 +1,9 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router-dom';
-import { Layout, Upload, Button, Radio } from 'antd';
+import { Layout, Upload, Button, Radio, Table } from 'antd';
 import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
-import { RadioChangeEvent } from 'antd/lib/radio/interface';
+import { RadioChangeEvent } from 'antd/es/radio';
+import { ColumnsType } from 'antd/es/table';
 import { UploadOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import { Dispatch, bindActionCreators } from 'redux';
@@ -10,8 +11,13 @@ import { actions } from '@/redux/actions/global';
 import { StoreState } from '@/redux';
 import XLSX, { WorkBook } from 'xlsx';
 import BScroll, { BScrollInstance } from 'better-scroll';
-
 const { Content } = Layout;
+
+interface TableDataRow {
+  id: string;
+  [key: string]: any;
+}
+type TableColumns = ColumnsType<object>;
 
 interface IProps extends RouteComponentProps {
   loading: boolean;
@@ -21,11 +27,14 @@ interface IState {
   fileList: any[];
   sheetNames: string[];
   currentSheet: string;
+  tableData: TableDataRow[];
+  tableColumns: TableColumns;
 }
 
 const uploadConfig: UploadProps = {
   accept: '.xlsx, .xls',
 };
+
 
 class Workbench extends React.Component<IProps, IState> {
   workbook: WorkBook | null = null;
@@ -37,6 +46,8 @@ class Workbench extends React.Component<IProps, IState> {
       fileList: [],
       sheetNames: [],
       currentSheet: '',
+      tableData: [],
+      tableColumns: [],
     };
   }
 
@@ -93,11 +104,71 @@ class Workbench extends React.Component<IProps, IState> {
   // 选择表改变
   handleSheetChange = (ev: RadioChangeEvent) => {
     this.setState({ currentSheet: ev.target.value });
-  } 
+    this.switchSheet(ev.target.value);
+  }
+
+  // 切换 sheet
+  switchSheet(sheetName: string) {
+    if (!this.workbook) return;
+
+    const sheet = this.workbook.Sheets[sheetName];
+    const ref: string = sheet?.['!autofilter']?.ref ?? sheet?.['!ref'] ?? '';
+    const range = XLSX.utils.decode_range(ref);
+
+    // 去除有合并的单元格行
+    const mergeRows: Set<number> = new Set();
+    if (sheet['!merges']) {
+      sheet['!merges'].forEach(rg => {
+        for (let i = rg.s.r; i <= rg.e.r; i++) {
+          mergeRows.add(i);
+        }
+      });
+    }
+
+    // 过滤 rows
+    const validRows: Set<number> = new Set();
+    for (let i = range.s.r; i <= range.e.r; i++) {
+      if (!sheet['A' + (i + 1)]) break;
+        
+      if (!mergeRows.has(i)) {
+        validRows.add(i + 1);
+      }
+    }
+
+    // 过滤列
+    const firstRow: number = validRows.values().next().value;
+    const validCols: Set<string> = new Set();
+    for (let i = range.s.c; i <= range.e.c; i++) {
+      const col: string = XLSX.utils.encode_col(i);
+      if (sheet[col + firstRow]) {
+        validCols.add(col);
+      } else {
+        break;
+      }
+    }
+
+    // 构造表头
+    const header: TableColumns = [];
+    for (let col of validCols.values()) {
+      const key = col + firstRow;
+      header.push({
+        title: sheet[key].w,
+        key: key,
+        dataIndex: key,
+      });
+    }
+
+    this.setState({
+      tableColumns: header,
+    });
+    console.log(range);
+    console.log(validRows);
+    console.log(validCols);
+    console.log(header);
+  }
 
   componentDidMount() {
     if (this.sheetsWrapper.current) {
-      console.log(this.sheetsWrapper.current);
       this.sheetScroll = new BScroll(this.sheetsWrapper.current, {
         scrollX: true,
         scrollY: true,
@@ -108,8 +179,10 @@ class Workbench extends React.Component<IProps, IState> {
   }
 
   componentDidUpdate(prevProps: IProps, prevState: IState) {
+    // 刷新选择表的布局
     if (this.state.sheetNames !== prevState.sheetNames && this.sheetScroll) {
       this.sheetScroll.refresh();
+      this.switchSheet(this.state.currentSheet);
     }
   }
 
@@ -138,7 +211,17 @@ class Workbench extends React.Component<IProps, IState> {
               </div>
             </div>
           </div>
-          <div className="workbench-preview"></div>
+          <div className="workbench-preview">
+            <Table
+              columns={this.state.tableColumns}
+              dataSource={this.state.tableData}
+              size="small"
+              bordered
+              scroll={{ x: 'max-content' }}
+              rowKey="id"
+            ></Table>
+          </div>
+          {/* <div className="workbench-analysis"></div> */}
         </Content>
       </Layout>
     );
