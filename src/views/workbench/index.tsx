@@ -1,34 +1,42 @@
 import React from 'react';
-import { Layout, Upload, Button } from 'antd';
+import { RouteComponentProps } from 'react-router-dom';
+import { Layout, Upload, Button, Radio } from 'antd';
 import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
+import { RadioChangeEvent } from 'antd/lib/radio/interface';
 import { UploadOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import { Dispatch, bindActionCreators } from 'redux';
 import { actions } from '@/redux/actions/global';
 import { StoreState } from '@/redux';
 import XLSX, { WorkBook } from 'xlsx';
+import BScroll, { BScrollInstance } from 'better-scroll';
 
 const { Content } = Layout;
 
-interface Props {
-  percent: number;
+interface IProps extends RouteComponentProps {
   loading: boolean;
-  toggleProgress: (status?: boolean) => void;
-  setPercent: (percent: number) => void;
+  toggleLoading: (status?: boolean) => void;
 }
-interface State {
-  fileList: any[]
+interface IState {
+  fileList: any[];
+  sheetNames: string[];
+  currentSheet: string;
 }
 
 const uploadConfig: UploadProps = {
   accept: '.xlsx, .xls',
 };
 
-class Workbench extends React.Component<Props, State> {
-  constructor(props: Props) {
+class Workbench extends React.Component<IProps, IState> {
+  workbook: WorkBook | null = null;
+  sheetsWrapper: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+  sheetScroll: BScrollInstance | null = null;
+  constructor(props: IProps) {
     super(props);
     this.state = {
       fileList: [],
+      sheetNames: [],
+      currentSheet: '',
     };
   }
 
@@ -42,8 +50,8 @@ class Workbench extends React.Component<Props, State> {
     this.setState({
       fileList,
     });
-    
-    if(fileList.length === 0) {
+
+    if (fileList.length === 0) {
       this.clearFile();
     } else {
       this.loadFile(fileList[0].originFileObj);
@@ -52,34 +60,67 @@ class Workbench extends React.Component<Props, State> {
 
   // 加载文件
   loadFile = (file: File | Blob | undefined) => {
-    if(!file) return;
+    if (!file) return;
 
     const fileReader: FileReader = new FileReader();
-    fileReader.onprogress = ev => {
-      const percent: number = (ev.loaded / ev.total) * 100;
-      this.props.setPercent(percent);
-    };
-    fileReader.onload = ev => {
-      const workbook: WorkBook = XLSX.read(fileReader.result, { type: 'array' });
 
-      console.log(workbook);
+    // 开始加载
+    fileReader.onloadstart = ev => {
+      this.props.toggleLoading(true);
     };
-    fileReader.readAsArrayBuffer(file);
-    this.props.setPercent(0);
-    this.props.toggleProgress(true);
+
+    // 加载中
+    fileReader.onloadend = ev => {
+      this.props.toggleLoading(false);
+    };
+
+    // 加载完成
+    fileReader.onload = ev => {
+      this.workbook = XLSX.read(fileReader.result, { type: 'array' });
+      this.setState({
+        sheetNames: [...this.workbook.SheetNames],
+        currentSheet: this.workbook.SheetNames.length ? this.workbook.SheetNames[0] : '',
+      });
+      console.log(this.workbook);
+    };
+    
+    fileReader.readAsArrayBuffer(file); // 读取文件
   }
 
   // 清除文件
-  clearFile = () => {}
+  clearFile = () => { }
+
+  // 选择表改变
+  handleSheetChange = (ev: RadioChangeEvent) => {
+    this.setState({ currentSheet: ev.target.value });
+  } 
+
+  componentDidMount() {
+    if (this.sheetsWrapper.current) {
+      console.log(this.sheetsWrapper.current);
+      this.sheetScroll = new BScroll(this.sheetsWrapper.current, {
+        scrollX: true,
+        scrollY: true,
+        click: true,
+        bounce: false,
+      });
+    }
+  }
+
+  componentDidUpdate(prevProps: IProps, prevState: IState) {
+    if (this.state.sheetNames !== prevState.sheetNames && this.sheetScroll) {
+      this.sheetScroll.refresh();
+    }
+  }
 
   render() {
     return (
       <Layout className="workbench">
         <Content className="workbench-content">
           <div className="workbench-operation">
-            <div className="col">
+            <div className="workbench-operation-left">
               <Upload
-                { ...uploadConfig }
+                {...uploadConfig}
                 fileList={this.state.fileList}
                 beforeUpload={this.handleBeforeUpload}
                 onChange={this.uploadOnChange}
@@ -87,7 +128,14 @@ class Workbench extends React.Component<Props, State> {
                 <Button icon={<UploadOutlined />}>选择本地文件</Button>
               </Upload>
             </div>
-            <div className="col">
+            <div className="workbench-operation-right">
+              <div className="sheets" ref={this.sheetsWrapper}>
+                <Radio.Group value={this.state.currentSheet} onChange={this.handleSheetChange}>
+                  {
+                    this.state.sheetNames.map((name, index) => <Radio.Button value={name} key={name.toString() + index}>{ name }</Radio.Button>)
+                  }
+                </Radio.Group>
+              </div>
             </div>
           </div>
           <div className="workbench-preview"></div>
@@ -98,13 +146,11 @@ class Workbench extends React.Component<Props, State> {
 }
 
 const stateToProps = (state: StoreState) => ({
-  loading: state.global.showProgress,
-  percent: state.global.percent,
+  loading: state.global.loading,
 });
 const dispatchToProps = (dispatch: Dispatch) => {
   return {
-    toggleProgress: (status?: boolean) => dispatch(actions.toggleGlobalProgress(status)),
-    setPercent: (percent: number) => dispatch(actions.setGlobalProgressPercent(percent)),
+    toggleLoading: (status?: boolean) => dispatch(actions.toggleGlobalLoading(status)),
   };
 };
 export default connect(stateToProps, dispatchToProps)(Workbench);

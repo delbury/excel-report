@@ -14,10 +14,27 @@
     display: flex;
     justify-content: space-between;
     height: 60px;
+
+    &-left {
+      
+    }
+    &-right {
+      margin-left: 10px;
+      overflow: hidden;
+
+      .sheets {
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
   }
   &-preview {
     flex: 1;
     background-color: #fff;
+  }
+
+  .ant-upload-list {
+    width: 240px;
   }
 }
 

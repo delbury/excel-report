@@ -6,11 +6,13 @@ import {
 export interface InitState {
   showProgress: boolean;
   percent: number;
+  loading: boolean;
 }
 
 const initState: InitState = {
   showProgress: false,
   percent: 0,
+  loading: false,
 };
 
 const globalReducer = function(state: InitState = initState, action: GlobalAction): InitState {
@@ -27,6 +29,12 @@ const globalReducer = function(state: InitState = initState, action: GlobalActio
       return {
         ...state,
         percent,
+      };
+    
+    case CONST.GLOBAL_TOGGLE_LOADING:
+      return {
+        ...state,
+        loading: action.payload.loading !== undefined ? action.payload.loading : !state.loading
       };
 
     default:

@@ -20,5 +20,6 @@ module.exports = {
     'semi': 'warn',
     'no-var': 'warn',
     'arrow-spacing': 'warn',
+    'indent': ["warn", 2, { SwitchCase: 1 }],
   }
 };

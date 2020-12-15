@@ -2,11 +2,13 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Redirect, Switch } from 'react-router-dom';
 import Workbench from '@/views/workbench';
 import DelProgress from '@/components/del-progress';
+import DelLoading from '@/components/del-loading';
 
 const App: React.FC = function() {
   return (
     <>
-      <DelProgress></DelProgress>
+      <DelProgress />
+      <DelLoading />
       <Router>
         <Switch>
           <Route path="/index" exact component={Workbench}></Route>
