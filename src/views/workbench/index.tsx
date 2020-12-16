@@ -289,11 +289,11 @@ class Workbench extends React.Component<IProps, IState> {
               rowKey="id"
               pagination={false}
               sticky={true}
-            ></Table>
-          </div>
-          <div className="workbench-analysis">
+            />
+
             <Analysis />
           </div>
+          
         </Content>
       </Layout>
     );
