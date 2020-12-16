@@ -12,7 +12,7 @@ const App: React.FC = function() {
       <Router>
         <Switch>
           <Route path="/index" exact component={Workbench}></Route>
-          <Redirect to="/index"></Redirect>
+          {/* <Redirect to="/index"></Redirect> */}
         </Switch>
       </Router>
     </>

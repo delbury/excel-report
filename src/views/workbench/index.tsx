@@ -11,12 +11,16 @@ import { actions } from '@/redux/actions/global';
 import { StoreState } from '@/redux';
 import XLSX, { WorkBook } from 'xlsx';
 import BScroll, { BScrollInstance } from 'better-scroll';
+import Analysis from './analysis';
+import { fetchTestFile } from '@/lib/util';
+
 const { Content } = Layout;
 
 interface TableDataRow {
   id: string;
   [key: string]: any;
 }
+type TableData = TableDataRow[];
 type TableColumns = ColumnsType<object>;
 
 interface IProps extends RouteComponentProps {
@@ -24,10 +28,10 @@ interface IProps extends RouteComponentProps {
   toggleLoading: (status?: boolean) => void;
 }
 interface IState {
-  fileList: any[];
+  fileList: UploadFile[];
   sheetNames: string[];
   currentSheet: string;
-  tableData: TableDataRow[];
+  tableData: TableData;
   tableColumns: TableColumns;
 }
 
@@ -40,6 +44,8 @@ class Workbench extends React.Component<IProps, IState> {
   workbook: WorkBook | null = null;
   sheetsWrapper: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
   sheetScroll: BScrollInstance | null = null;
+  tableColumnsCaches: { [key: string]: TableColumns } = {}; // 表头列配置缓存
+  tableDataCaches: { [key: string]: TableData } = {}; // 表格数据缓存
   constructor(props: IProps) {
     super(props);
     this.state = {
@@ -51,6 +57,7 @@ class Workbench extends React.Component<IProps, IState> {
     };
   }
 
+  // 取消自动上传
   handleBeforeUpload = (file: RcFile, fileList: RcFile[]): boolean => {
     return false;
   }
@@ -70,7 +77,7 @@ class Workbench extends React.Component<IProps, IState> {
   }
 
   // 加载文件
-  loadFile = (file: File | Blob | undefined) => {
+  loadFile = (file: File | Blob | undefined | null) => {
     if (!file) return;
 
     const fileReader: FileReader = new FileReader();
@@ -87,6 +94,7 @@ class Workbench extends React.Component<IProps, IState> {
 
     // 加载完成
     fileReader.onload = ev => {
+      console.log(fileReader);
       this.workbook = XLSX.read(fileReader.result, { type: 'array' });
       this.setState({
         sheetNames: [...this.workbook.SheetNames],
@@ -99,7 +107,20 @@ class Workbench extends React.Component<IProps, IState> {
   }
 
   // 清除文件
-  clearFile = () => { }
+  clearFile = () => {
+    // 清除缓存
+    this.tableColumnsCaches = {};
+    this.tableDataCaches = {};
+
+    // 清除表
+    this.setState({
+      tableColumns: [],
+      tableData: [],
+      sheetNames: [],
+      currentSheet: '',
+      fileList: [],
+    });
+  }
 
   // 选择表改变
   handleSheetChange = (ev: RadioChangeEvent) => {
@@ -113,7 +134,25 @@ class Workbench extends React.Component<IProps, IState> {
 
     const sheet = this.workbook.Sheets[sheetName];
     const ref: string = sheet?.['!autofilter']?.ref ?? sheet?.['!ref'] ?? '';
-    const range = XLSX.utils.decode_range(ref);
+
+    // 空表
+    if (!ref) {
+      this.setState({
+        tableColumns: [],
+      });
+      return;
+    }
+
+    // 已有缓存
+    if (sheetName in this.tableColumnsCaches) {
+      this.setState({
+        tableColumns: this.tableColumnsCaches[sheetName],
+        tableData: this.tableDataCaches[sheetName],
+      });
+      return;
+    }
+
+    const range = XLSX.utils.decode_range(ref); // 当前 sheet 的数据范围
 
     // 去除有合并的单元格行
     const mergeRows: Set<number> = new Set();
@@ -125,7 +164,7 @@ class Workbench extends React.Component<IProps, IState> {
       });
     }
 
-    // 过滤 rows
+    // 过滤存在合并的行
     const validRows: Set<number> = new Set();
     for (let i = range.s.r; i <= range.e.r; i++) {
       if (!sheet['A' + (i + 1)]) break;
@@ -135,7 +174,7 @@ class Workbench extends React.Component<IProps, IState> {
       }
     }
 
-    // 过滤列
+    // 过滤空列，第一行的最长连续非空区域
     const firstRow: number = validRows.values().next().value;
     const validCols: Set<string> = new Set();
     for (let i = range.s.c; i <= range.e.c; i++) {
@@ -151,23 +190,43 @@ class Workbench extends React.Component<IProps, IState> {
     const header: TableColumns = [];
     for (let col of validCols.values()) {
       const key = col + firstRow;
+      const title = sheet[key].w + `( ${col})`;
+      const length = title.length;
       header.push({
-        title: sheet[key].w,
-        key: key,
-        dataIndex: key,
+        title,
+        key: col,
+        dataIndex: col,
+        width: `calc(${(length >= 4 ? length : 4) + 'em'} + 17px)`,
+        ellipsis: true,
       });
     }
 
+    // 构造表数据
+    const body: TableData = [];
+    // 行
+    const rows = validRows.values();
+    rows.next(); // 去除表头
+    for (let r of rows) {
+      const rowData: TableDataRow = { id: r + '' };
+      
+      // 列
+      for (let c of validCols.values()) {
+        rowData[c] = sheet[c + r]?.w ?? '';
+      }
+
+      body.push(rowData);
+    }
+
+    this.tableColumnsCaches[sheetName] = header; // 缓存表头
+    this.tableDataCaches[sheetName] = body; // 缓存数据
     this.setState({
       tableColumns: header,
+      tableData: body,
     });
-    console.log(range);
-    console.log(validRows);
-    console.log(validCols);
-    console.log(header);
   }
 
   componentDidMount() {
+    // 初始化选择表区域滚动功能
     if (this.sheetsWrapper.current) {
       this.sheetScroll = new BScroll(this.sheetsWrapper.current, {
         scrollX: true,
@@ -176,14 +235,23 @@ class Workbench extends React.Component<IProps, IState> {
         bounce: false,
       });
     }
+
+    this.test();
   }
 
   componentDidUpdate(prevProps: IProps, prevState: IState) {
-    // 刷新选择表的布局
+    // 刷新选择表区域的滚动布局
     if (this.state.sheetNames !== prevState.sheetNames && this.sheetScroll) {
       this.sheetScroll.refresh();
       this.switchSheet(this.state.currentSheet);
     }
+  }
+
+  // 测试
+  async test() {
+    const blob = await fetchTestFile(); // 获取测试文件
+    console.log(blob);
+    this.loadFile(blob);
   }
 
   render() {
@@ -217,11 +285,15 @@ class Workbench extends React.Component<IProps, IState> {
               dataSource={this.state.tableData}
               size="small"
               bordered
-              scroll={{ x: 'max-content' }}
+              scroll={{ x: 'max-content', y: 400 }}
               rowKey="id"
+              pagination={false}
+              sticky={true}
             ></Table>
           </div>
-          {/* <div className="workbench-analysis"></div> */}
+          <div className="workbench-analysis">
+            <Analysis />
+          </div>
         </Content>
       </Layout>
     );
