@@ -94,7 +94,6 @@ class Workbench extends React.Component<IProps, IState> {
 
     // 加载完成
     fileReader.onload = ev => {
-      console.log(fileReader);
       this.workbook = XLSX.read(fileReader.result, { type: 'array' });
       this.setState({
         sheetNames: [...this.workbook.SheetNames],
@@ -250,7 +249,6 @@ class Workbench extends React.Component<IProps, IState> {
   // 测试
   async test() {
     const blob = await fetchTestFile(); // 获取测试文件
-    console.log(blob);
     this.loadFile(blob);
   }
 
@@ -285,12 +283,12 @@ class Workbench extends React.Component<IProps, IState> {
               dataSource={this.state.tableData}
               size="small"
               bordered
-              scroll={{ x: 'max-content', y: 400 }}
+              scroll={{ x: 'max-content', y: 300 }}
               rowKey="id"
               pagination={false}
               sticky={true}
             />
-
+        
             <Analysis />
           </div>
           

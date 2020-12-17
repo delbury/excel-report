@@ -56,19 +56,22 @@ $border-base: 1px solid rgb(240, 242, 245);
 
     // 行计算区
     &-rows {
-      padding: 0;
-      list-style: none;
 
       .row {
         display: flex;
         align-items: center;
         padding: 10px;
         border-bottom: $border-base;
-
+        
         >*:not(:last-child) {
           margin-right: 10px;
         }
       }
+    }
+
+    .section-title {
+      padding: 10px;
+      border-bottom: $border-base;
     }
   }
 
