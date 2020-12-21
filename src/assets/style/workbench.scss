@@ -56,6 +56,7 @@ $border-base: 1px solid rgb(240, 242, 245);
 
     // 行计算区
     &-rows {
+      counter-reset: count 0;
 
       .row {
         display: flex;
@@ -65,6 +66,23 @@ $border-base: 1px solid rgb(240, 242, 245);
         
         >*:not(:last-child) {
           margin-right: 10px;
+        }
+
+        .ant-form-item-control > .ant-form-item-explain {
+          display: none;
+        }
+        
+
+        &::before {
+          flex-shrink: 0;
+          width: 1.5em;
+          margin-right: 10px;
+          display: inline-block;
+          content: counter(count)".";
+          counter-increment: count 1;
+          color: rgb(24, 144, 255);
+          font-weight: bold;
+          text-align: right;
         }
       }
     }
