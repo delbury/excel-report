@@ -2,7 +2,8 @@ import React from 'react';
 import { Button, Tooltip, Input, Form } from 'antd';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { FormInstance } from 'antd/es/form';
-import { validateFormula } from './tools';
+import { validateFormula, resolveFormula, formatFormula } from './tools';
+import { TableColumnsMap } from './index';
 
 const formFormulaName = 'formFormula';
 interface TipPropRow {
@@ -30,9 +31,11 @@ interface Row {
   id: string;
   title: string;
   formula: string;
-  formatFormula?: string;
+  formatedFormula?: string;
 }
-interface IProps { }
+interface IProps {
+  columnsMap: TableColumnsMap;
+}
 interface IState {
   rows: Row[];
 }
@@ -62,7 +65,7 @@ class Analysis extends React.Component<IProps, IState> {
         id: Date.now().toString(),
         title: '',
         formula: '',
-        formatFormula: '',
+        formatedFormula: '',
       }]
     }, cb);
   }
@@ -89,7 +92,7 @@ class Analysis extends React.Component<IProps, IState> {
     const rows = [...this.state.rows];
     const inputValue = ev.target.value.toLocaleUpperCase();
     rows[index].formula = inputValue;
-    rows[index].formatFormula = inputValue;
+    rows[index].formatedFormula = formatFormula(this.props.columnsMap, inputValue);
 
     this.setState({ rows });
     this.setFormValue(row, inputValue);
@@ -99,7 +102,7 @@ class Analysis extends React.Component<IProps, IState> {
   setInitFormValues = () => {
     const rows = this.state.rows.map(row => {
       row.formula = 'B + C + D';
-      row.formatFormula = row.formula;
+      row.formatedFormula = formatFormula(this.props.columnsMap, row.formula);
       this.setFormValue(row, row.formula);
 
       return row;
@@ -111,7 +114,12 @@ class Analysis extends React.Component<IProps, IState> {
   // 计算结果
   handleGetResult = () => {
     if (this.formRef.current) {
-      this.formRef.current.validateFields();
+      this.formRef.current.validateFields().then(() => {
+        // const operations = this.state.rows.map(row => resolveFormula(row.formula));
+
+        formatFormula(this.props.columnsMap, this.state.rows[0].formula);
+
+      }).catch(() => null);
     }
   }
 
@@ -167,7 +175,7 @@ class Analysis extends React.Component<IProps, IState> {
                   onChange={(ev) => this.handleTitleChange(ev, row, index)}
                 />
                 <Tooltip
-                  title={() => <Tips rows={[{ message: row.formatFormula ?? '' }]} /> }
+                  title={() => <Tips rows={[{ message: row.formatedFormula ?? '' }]} /> }
                   placement="topLeft"
                   trigger={['focus']}
                   mouseLeaveDelay={0}

@@ -3,7 +3,7 @@ import { RouteComponentProps } from 'react-router-dom';
 import { Layout, Upload, Button, Radio, Table } from 'antd';
 import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
 import { RadioChangeEvent } from 'antd/es/radio';
-import { ColumnsType } from 'antd/es/table';
+import { ColumnsType, ColumnType } from 'antd/es/table';
 import { UploadOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import { Dispatch, bindActionCreators } from 'redux';
@@ -21,7 +21,9 @@ interface TableDataRow {
   [key: string]: any;
 }
 type TableData = TableDataRow[];
-type TableColumns = ColumnsType<object>;
+export type TableColumn = ColumnType<object>;
+export type TableColumns = ColumnsType<object>;
+export type TableColumnsMap = Map<string, TableColumn>;
 
 interface IProps extends RouteComponentProps {
   loading: boolean;
@@ -46,6 +48,7 @@ class Workbench extends React.Component<IProps, IState> {
   sheetScroll: BScrollInstance | null = null;
   tableColumnsCaches: { [key: string]: TableColumns } = {}; // 表头列配置缓存
   tableDataCaches: { [key: string]: TableData } = {}; // 表格数据缓存
+  tableColumnsMapCaches: { [key: string]: TableColumnsMap } = {}; // 表头配置hash缓存
   constructor(props: IProps) {
     super(props);
     this.state = {
@@ -110,6 +113,7 @@ class Workbench extends React.Component<IProps, IState> {
     // 清除缓存
     this.tableColumnsCaches = {};
     this.tableDataCaches = {};
+    this.tableColumnsMapCaches = {};
 
     // 清除表
     this.setState({
@@ -185,19 +189,22 @@ class Workbench extends React.Component<IProps, IState> {
       }
     }
 
-    // 构造表头
+    // 构造表头、hash
     const header: TableColumns = [];
+    const headerMap: TableColumnsMap = new Map();
     for (let col of validCols.values()) {
       const key = col + firstRow;
-      const title = sheet[key].w + `( ${col})`;
+      const title = sheet[key].w + `(${col})`;
       const length = title.length;
-      header.push({
+      const obj: TableColumn = {
         title,
         key: col,
         dataIndex: col,
         width: `calc(${(length >= 4 ? length : 4) + 'em'} + 17px)`,
         ellipsis: true,
-      });
+      };
+      header.push(obj);
+      headerMap.set(col, obj);
     }
 
     // 构造表数据
@@ -218,6 +225,7 @@ class Workbench extends React.Component<IProps, IState> {
 
     this.tableColumnsCaches[sheetName] = header; // 缓存表头
     this.tableDataCaches[sheetName] = body; // 缓存数据
+    this.tableColumnsMapCaches[sheetName] = headerMap; // 缓存hash
     this.setState({
       tableColumns: header,
       tableData: body,
@@ -253,6 +261,8 @@ class Workbench extends React.Component<IProps, IState> {
   }
 
   render() {
+    const headerMap = this.tableColumnsMapCaches[this.state.currentSheet];
+
     return (
       <Layout className="workbench">
         <Content className="workbench-content">
@@ -289,7 +299,7 @@ class Workbench extends React.Component<IProps, IState> {
               sticky={true}
             />
         
-            <Analysis />
+            <Analysis columnsMap={headerMap} />
           </div>
           
         </Content>
