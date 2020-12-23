@@ -3,9 +3,9 @@ import { Button, Tooltip, Input, Form } from 'antd';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { FormInstance } from 'antd/es/form';
 import { validateFormula, resolveFormula, formatFormula } from './tools';
-import { TableColumnsMap } from './index';
+import { TableColumnsMap, TableData } from './index';
 
-const formFormulaName = 'formFormula';
+const FORM_FORMULA_NAME = 'formFormula';
 interface TipPropRow {
   message: string;
   isBold?: boolean;
@@ -32,9 +32,11 @@ interface Row {
   title: string;
   formula: string;
   formatedFormula?: string;
+  resolvedFormula?: string;
 }
 interface IProps {
   columnsMap: TableColumnsMap;
+  data: TableData;
 }
 interface IState {
   rows: Row[];
@@ -82,7 +84,7 @@ class Analysis extends React.Component<IProps, IState> {
   setFormValue(row: Row, value: string) {
     if (this.formRef.current) {
       this.formRef.current.setFieldsValue({
-        [formFormulaName + row.id]: value,
+        [FORM_FORMULA_NAME + row.id]: value,
       });
     }
   }
@@ -92,7 +94,13 @@ class Analysis extends React.Component<IProps, IState> {
     const rows = [...this.state.rows];
     const inputValue = ev.target.value.toLocaleUpperCase();
     rows[index].formula = inputValue;
-    rows[index].formatedFormula = formatFormula(this.props.columnsMap, inputValue);
+
+    if (this.formRef.current) {
+      this.formRef.current.validateFields([FORM_FORMULA_NAME + row.id]).then(() => {
+        rows[index].formatedFormula = formatFormula(this.props.columnsMap, inputValue);
+        rows[index].resolvedFormula = resolveFormula(inputValue);
+      }).catch(() => {});
+    }
 
     this.setState({ rows });
     this.setFormValue(row, inputValue);
@@ -102,7 +110,7 @@ class Analysis extends React.Component<IProps, IState> {
   setInitFormValues = () => {
     const rows = this.state.rows.map(row => {
       row.formula = 'B + C + D';
-      row.formatedFormula = formatFormula(this.props.columnsMap, row.formula);
+
       this.setFormValue(row, row.formula);
 
       return row;
@@ -115,10 +123,15 @@ class Analysis extends React.Component<IProps, IState> {
   handleGetResult = () => {
     if (this.formRef.current) {
       this.formRef.current.validateFields().then(() => {
-        // const operations = this.state.rows.map(row => resolveFormula(row.formula));
-
-        formatFormula(this.props.columnsMap, this.state.rows[0].formula);
-
+        const res: any[] = this.props.data.map(rowObj => {
+          if (this.state.rows[0].resolvedFormula) {
+            return eval(this.state.rows[0].resolvedFormula);
+          } else {
+            return 0;
+          }
+        });
+        
+        console.log(res);
       }).catch(() => null);
     }
   }
@@ -181,10 +194,10 @@ class Analysis extends React.Component<IProps, IState> {
                   mouseLeaveDelay={0}
                 >
                   <Form.Item
-                    name={formFormulaName + row.id}
+                    name={FORM_FORMULA_NAME + row.id}
                     hasFeedback
                     style={{ margin: 0, width: '100%' }}
-                    shouldUpdate={true}
+                    validateTrigger="onBlur"
                     rules={[
                       {
                         validator: (rule: any, value: any) => {

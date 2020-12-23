@@ -5,7 +5,7 @@ const pretreatFormula = function (formula: string): string {
   formula = formula.replace(/\s/g, '');
 
   return formula;
-}
+};
 
 // 校验公式
 export const validateFormula = function (formula: string): boolean {
@@ -18,7 +18,7 @@ export const validateFormula = function (formula: string): boolean {
 // 公式格式化显示
 export const formatFormula = function (map: TableColumnsMap, formula: string): string {
   if (!map) return '';
-  formula = pretreatFormula(formula).replace(/\w+/g, (matched) => {
+  formula = pretreatFormula(formula).replace(/[A-z]+/g, (matched) => {
     return map.get(matched)?.title?.toString() || '';
   });
 
@@ -26,8 +26,13 @@ export const formatFormula = function (map: TableColumnsMap, formula: string): s
   return formula;
 };
 
-// 解析公式
-export const resolveFormula = function (formula: string): string {
+// 计算公式
+export const resolveFormula = function (formula: string, rowObjName: string = 'rowObj'): string {
+  if (!formula) return '';
+  formula = pretreatFormula(formula).replace(/[A-z]+/g, (matched) => {
+    return `${rowObjName}.${matched}`;
+  });
 
-  return '';
+  console.log(formula);
+  return formula;
 };

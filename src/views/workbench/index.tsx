@@ -20,7 +20,7 @@ interface TableDataRow {
   id: string;
   [key: string]: any;
 }
-type TableData = TableDataRow[];
+export type TableData = TableDataRow[];
 export type TableColumn = ColumnType<object>;
 export type TableColumns = ColumnsType<object>;
 export type TableColumnsMap = Map<string, TableColumn>;
@@ -299,7 +299,7 @@ class Workbench extends React.Component<IProps, IState> {
               sticky={true}
             />
         
-            <Analysis columnsMap={headerMap} />
+            <Analysis columnsMap={headerMap} data={ this.state.tableData } />
           </div>
           
         </Content>
