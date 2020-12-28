@@ -42,7 +42,7 @@ export const validateFormula = function (formula: string, row: Row, map: TableCo
   try {
     const res = eval(resolvedFormula);
     return res;
-  } catch {
+  } catch (err) {
     return false;
   }
 

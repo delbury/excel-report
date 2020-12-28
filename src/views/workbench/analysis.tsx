@@ -41,7 +41,7 @@ export interface Row {
   formula: string;
   formatedFormula: string;
   resolvedFormula: string;
-  example?: string;
+  example?: string | number | boolean;
 }
 enum FieldTypes { Text = 'text', Origin = 'origin', Computed = 'computed' };
 enum FieldOperationTypes { Summation = 'summation', Average = 'average', Percentage = 'percentage' };
@@ -59,6 +59,8 @@ interface IProps {
 interface IState {
   rows: Row[];
   fields: Field[];
+  resultTemplate: string;
+  resultOutput: string;
 }
 
 class Analysis extends React.Component<IProps, IState> {
@@ -68,6 +70,8 @@ class Analysis extends React.Component<IProps, IState> {
     super(props);
 
     this.state = {
+      resultTemplate: '',
+      resultOutput: '',
       rows: [],
       fields: [
         { id: Date.now().toString(), value: '', type: FieldTypes.Text },
@@ -151,7 +155,7 @@ class Analysis extends React.Component<IProps, IState> {
   // 设置表单初值
   setInitFormValues = () => {
     const rows = this.state.rows.map(row => {
-      row.formula = `B + C.padStart(2, '0') + D.padStart(2, '0')`;
+      row.formula = `+B + +C`;
 
       this.setFormValue(row, row.formula);
 
@@ -201,6 +205,13 @@ class Analysis extends React.Component<IProps, IState> {
     const fields = [...this.state.fields];
     fields[index].value = ev;
     this.setState({ fields });
+  }
+
+  // 输出模板改变
+  handleResultTemplateChange = (ev: React.ChangeEvent<HTMLTextAreaElement>) => {
+    this.setState({
+      resultTemplate: ev.target.value,
+    });
   }
 
   render() {
@@ -305,7 +316,7 @@ class Analysis extends React.Component<IProps, IState> {
                           
                           const res = validateFormula(value, row, this.props.columnsMap, this.props.data);
                           const rows = [...this.state.rows];
-                          if (typeof res === 'string') {
+                          if (res !== false) {
                             rows[index].example = res;
                             this.setState({ rows });
                             return Promise.resolve();
@@ -335,7 +346,19 @@ class Analysis extends React.Component<IProps, IState> {
         </Form>
 
         <div className="workbench-analysis-result">
-          {
+          <Input.TextArea
+            autoSize={false}
+            placeholder="填写输出模板"
+            style={{ marginBottom: '10px', resize: 'none', flex: 1 }}
+            value={this.state.resultTemplate}
+            onChange={ev => this.handleResultTemplateChange(ev)}
+          ></Input.TextArea>
+          <Input.TextArea
+            autoSize={false}
+            style={{ resize: 'none', flex: 1 }}
+            value={ this.state.resultOutput }
+            ></Input.TextArea>
+          {/* {
             this.state.fields.map((field, index) => {
               if (field.type === FieldTypes.Text) {
                 // 文本字段
@@ -400,7 +423,7 @@ class Analysis extends React.Component<IProps, IState> {
               size="small"
               style={{ width: '60px' }}
             ></Button>
-          </DelPopselect>
+          </DelPopselect> */}
         </div>
       </div>
     );
