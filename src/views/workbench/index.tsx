@@ -299,7 +299,7 @@ class Workbench extends React.Component<IProps, IState> {
               sticky={true}
             />
         
-            <Analysis columnsMap={headerMap} data={ this.state.tableData } />
+            <Analysis columns={this.state.tableColumns} columnsMap={headerMap} data={ this.state.tableData } />
           </div>
           
         </Content>

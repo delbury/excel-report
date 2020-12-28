@@ -1,9 +1,10 @@
 import React from 'react';
-import { Button, Tooltip, Input, Form } from 'antd';
-import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import { Button, Tooltip, Input, Form, Tag, Select } from 'antd';
+import { PlusOutlined, MinusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { FormInstance } from 'antd/es/form';
 import { validateFormula, resolveFormula, formatFormula } from './tools';
-import { TableColumnsMap, TableData } from './index';
+import { TableColumnsMap, TableData, TableColumns } from './index';
+import DelPopselect, { Option as DelPopselectOption } from '@/components/del-popselect';
 
 const FORM_FORMULA_NAME = 'formFormula';
 interface TipPropRow {
@@ -27,21 +28,38 @@ const Tips: React.FC<ITipProps> = function (props: ITipProps) {
   );
 };
 
-interface Row {
+// 常用函数的提示信息
+const commonFormulaInfos: TipPropRow[] = [
+  { message: 'X.toString(): 转换为字符串' },
+  { message: 'X.padStart(num, str): 字符串头部填充' },
+  { message: 'X.padEnd(num, str): 字符串尾部填充' },
+];
+
+export interface Row {
   id: string;
   title: string;
   formula: string;
-  formatedFormula?: string;
-  resolvedFormula?: string;
+  formatedFormula: string;
+  resolvedFormula: string;
+  example?: string;
+}
+enum FieldTypes { Text = 'text', Origin = 'origin', Computed = 'computed' };
+enum FieldOperationTypes { Summation = 'summation', Average = 'average', Percentage = 'percentage' };
+interface Field {
+  id: string;
+  value: string | undefined;
+  type: FieldTypes;
+  operationType?: FieldOperationTypes;
 }
 interface IProps {
   columnsMap: TableColumnsMap;
   data: TableData;
+  columns: TableColumns;
 }
 interface IState {
   rows: Row[];
+  fields: Field[];
 }
-
 
 class Analysis extends React.Component<IProps, IState> {
   formRef: React.RefObject<FormInstance> = React.createRef();
@@ -51,6 +69,10 @@ class Analysis extends React.Component<IProps, IState> {
 
     this.state = {
       rows: [],
+      fields: [
+        { id: Date.now().toString(), value: '', type: FieldTypes.Text },
+        { id: (Date.now() + 1).toString(), value: undefined, type: FieldTypes.Origin },
+      ],
     };
   }
 
@@ -68,6 +90,7 @@ class Analysis extends React.Component<IProps, IState> {
         title: '',
         formula: '',
         formatedFormula: '',
+        resolvedFormula: '',
       }]
     }, cb);
   }
@@ -89,27 +112,46 @@ class Analysis extends React.Component<IProps, IState> {
     }
   }
 
+  // 公式获得焦点
+  handleFormulaFocus = (ev: React.FocusEvent<HTMLInputElement>, row: Row, index: number) => {
+    if (row.formula && !row.formatedFormula && this.formRef.current) {
+      const rows = [...this.state.rows];
+
+      this.formRef.current.validateFields([FORM_FORMULA_NAME + row.id]).then(() => {
+        rows[index].formatedFormula = formatFormula(this.props.columnsMap, rows[index].formula);
+        rows[index].resolvedFormula = resolveFormula(rows[index].formula);
+        this.setState({ rows });
+      }).catch(() => {});
+    }
+  }
+
   // 输入公式
   handleFormulaChange = (ev: React.ChangeEvent<HTMLInputElement>, row: Row, index: number) => {
     const rows = [...this.state.rows];
-    const inputValue = ev.target.value.toLocaleUpperCase();
+    const inputValue = ev.target.value;
     rows[index].formula = inputValue;
 
     if (this.formRef.current) {
       this.formRef.current.validateFields([FORM_FORMULA_NAME + row.id]).then(() => {
         rows[index].formatedFormula = formatFormula(this.props.columnsMap, inputValue);
         rows[index].resolvedFormula = resolveFormula(inputValue);
-      }).catch(() => {});
+        this.setState({ rows });
+      }).catch(() => {
+        rows[index].formatedFormula = '';
+        rows[index].example = '';
+        // rows[index].resolvedFormula = '';
+        this.setState({ rows });
+      });
+    } else {
+      this.setState({ rows });
     }
-
-    this.setState({ rows });
     this.setFormValue(row, inputValue);
   }
 
   // 设置表单初值
   setInitFormValues = () => {
     const rows = this.state.rows.map(row => {
-      row.formula = 'B + C + D';
+      row.formula = `B + C.padStart(2, '0') + D.padStart(2, '0')`;
 
       this.setFormValue(row, row.formula);
 
@@ -136,6 +178,30 @@ class Analysis extends React.Component<IProps, IState> {
     }
   }
 
+  // 添加一个统计字段
+  handleFieldAdd = (option: DelPopselectOption<FieldTypes>) => {
+    const fields = [...this.state.fields];
+    const field: Field = {
+      id: Date.now().toString(),
+      value: '',
+      type: option.key
+    };
+    fields.push(field);
+    this.setState({ fields });
+  }
+
+  // 统计字段输入值改变
+  handleFieldInputChange(ev: React.ChangeEvent<HTMLInputElement>, field: Field, index: number) {
+    const fields = [...this.state.fields];
+    fields[index].value = ev.target.value;
+    this.setState({ fields });
+  }
+
+  handleFieldOriginSelectChange(ev: string, field: Field, index: number) {
+    const fields = [...this.state.fields];
+    fields[index].value = ev;
+    this.setState({ fields });
+  }
 
   render() {
     return (
@@ -144,8 +210,8 @@ class Analysis extends React.Component<IProps, IState> {
           <Tooltip
             title={<Tips rows={[
               { message: '新增一项行统计' },
-              { message: '计算公式说明：' }]
-            } />}
+              { message: '计算公式说明：' }
+            ]} />}
             placement="topRight"
           >
             <Button
@@ -156,7 +222,21 @@ class Analysis extends React.Component<IProps, IState> {
               onClick={() => this.handleAddRow()}
             ></Button>
           </Tooltip>
-          <Button type="primary" size="small" onClick={() => this.handleGetResult()} >计算</Button>
+
+          <Button type="primary" size="small" onClick={() => this.handleGetResult()}>
+            <span>计算</span>
+            <Tooltip
+              overlayClassName="workbench-analysis-formula-tooltip"
+              title={<Tips rows={[
+                { message: '常用公式：' },
+                ...commonFormulaInfos,
+              ]} />}
+              placement="right"
+            >
+              <InfoCircleOutlined />
+            </Tooltip>
+          </Button>
+
           <Button size="small">保存</Button>
         </div>
 
@@ -169,7 +249,16 @@ class Analysis extends React.Component<IProps, IState> {
           {
             this.state.rows.map((row, index) => (
               <div className="row" key={row.id}>
-                <Button
+                <Tag
+                  color="#3b5999"
+                  closable
+                  onClose={() => this.setState({
+                    rows: this.state.rows.filter(r => r.id !== row.id)
+                  })}
+                >
+                  {`自定义字段(OWN${(index + 1).toString().padStart(2, '0')})`}
+                </Tag>
+                {/* <Button
                   type="primary"
                   danger
                   icon={<MinusOutlined />}
@@ -178,7 +267,14 @@ class Analysis extends React.Component<IProps, IState> {
                   onClick={() => this.setState({
                     rows: this.state.rows.filter(r => r.id !== row.id)
                   })}
-                ></Button>
+                ></Button> */}
+                {/* <Input
+                  value={`自定义字段(OWN${index + 1})`}
+                  size="small"
+                  style={{ width: '240px' }}
+                  disabled
+                /> */}
+
                 <Input
                   value={row.title}
                   size="small"
@@ -187,25 +283,35 @@ class Analysis extends React.Component<IProps, IState> {
                   style={{ width: '200px' }}
                   onChange={(ev) => this.handleTitleChange(ev, row, index)}
                 />
+
                 <Tooltip
-                  title={() => <Tips rows={[{ message: row.formatedFormula ?? '' }]} /> }
+                  title={() => <Tips rows={[
+                    { message: row.formatedFormula ?? '' },
+                    { message: row.formatedFormula ? ('第一行结果 = ' + row.example ?? '') : '' }
+                  ]} />}
                   placement="topLeft"
                   trigger={['focus']}
-                  mouseLeaveDelay={0}
+                  overlayClassName="workbench-analysis-formula-tooltip"
                 >
                   <Form.Item
                     name={FORM_FORMULA_NAME + row.id}
                     hasFeedback
                     style={{ margin: 0, width: '100%' }}
-                    validateTrigger="onBlur"
+                    validateTrigger={[]}
                     rules={[
                       {
                         validator: (rule: any, value: any) => {
                           if(!value) return Promise.reject('公式不能为空！');
-
-                          if (validateFormula(value)) {
+                          
+                          const res = validateFormula(value, row, this.props.columnsMap, this.props.data);
+                          const rows = [...this.state.rows];
+                          if (typeof res === 'string') {
+                            rows[index].example = res;
+                            this.setState({ rows });
                             return Promise.resolve();
                           } else {
+                            rows[index].example = 'null';
+                            this.setState({ rows });
                             return Promise.reject('公式格式错误！');
                           }
                         },
@@ -218,6 +324,7 @@ class Analysis extends React.Component<IProps, IState> {
                       allowClear
                       placeholder="输入计算公式"
                       onChange={(ev) => this.handleFormulaChange(ev, row, index)}
+                      onFocus={(ev) => this.handleFormulaFocus(ev, row, index)}
                       autoComplete="off"
                     />
                   </Form.Item>
@@ -226,6 +333,75 @@ class Analysis extends React.Component<IProps, IState> {
             ))
           }
         </Form>
+
+        <div className="workbench-analysis-result">
+          {
+            this.state.fields.map((field, index) => {
+              if (field.type === FieldTypes.Text) {
+                // 文本字段
+                return (
+                  <div key={field.id} className="workbench-analysis-result-field">
+                    <Tooltip placement="topLeft" title={field.value} trigger={['hover']}>
+                      <Input
+                        placeholder="输入文本"
+                        size="small"
+                        value={field.value}
+                        onChange={(ev) => this.handleFieldInputChange(ev, field, index)}
+                        allowClear
+                      ></Input>
+                    </Tooltip>
+                  </div>
+                );
+
+              } else if (field.type === FieldTypes.Origin) {
+                // 原生字段
+                return (
+                  <div key={field.id} className="workbench-analysis-result-field">
+                    <Select
+                      value={field.value}
+                      size="small"
+                      style={{ flex: 1 }}
+                      placeholder="选择原生字段"
+                      allowClear
+                      onChange={(ev) => this.handleFieldOriginSelectChange(ev, field, index)}
+                    >
+                      {
+                        this.props.columns.map(col => (<Select.Option key={col.key} value={col.key ?? ''}>{ col.title }</Select.Option>))
+                      }
+                    </Select>
+
+                    <Select
+                      value={field.operationType}
+                      size="small"
+                      style={{ width: '90px', flexGrow: 0, flexShrink: 0 }}
+                      placeholder="运算"
+                      allowClear
+                    >
+                      <Select.Option value={FieldOperationTypes.Summation}>求和</Select.Option>
+                      <Select.Option value={FieldOperationTypes.Average}>平均</Select.Option>
+                      <Select.Option value={FieldOperationTypes.Percentage}>百分比</Select.Option>
+                    </Select>
+                  </div>
+                );
+              }
+            })
+          }
+          <DelPopselect
+            options={[
+              { title: '文本', key: FieldTypes.Text },
+              { title: '原生字段', key: FieldTypes.Origin },
+              { title: '自定义字段', key: FieldTypes.Computed },
+            ]}
+            onSelect={(option) => this.handleFieldAdd(option)}
+          >
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              size="small"
+              style={{ width: '60px' }}
+            ></Button>
+          </DelPopselect>
+        </div>
       </div>
     );
   }

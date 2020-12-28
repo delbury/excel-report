@@ -86,6 +86,30 @@ $border-base: 1px solid rgb(240, 242, 245);
       }
     }
 
+    // 结果输出区
+    &-result {
+      flex-grow: 1;
+      min-height: 200px;
+      margin: 5px;
+      padding: 10px 5px;
+      border: 1px dashed skyblue;
+      border-radius: 5px;
+
+      // display: flex;
+      // flex-wrap: wrap;
+      // align-content: flex-start;
+      
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 240px);
+      grid-template-rows: min-content;
+      gap: 10px;
+      justify-content: center;
+
+      &-field {
+        display: flex;
+      }
+    }
+
     .section-title {
       padding: 10px;
       border-bottom: $border-base;
@@ -95,6 +119,11 @@ $border-base: 1px solid rgb(240, 242, 245);
   .ant-upload-list {
     width: 240px;
   }
+}
+
+.workbench-analysis-formula-tooltip {
+  max-width: unset !important;
+  // right: 40px;
 }
 
 .flex-fill {
