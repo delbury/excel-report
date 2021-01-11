@@ -123,6 +123,14 @@ $border-base: 1px solid rgb(240, 242, 245);
   .ant-upload-list {
     width: 240px;
   }
+
+  &-result {
+    flex: 1;
+
+    &-btns {
+      padding: 10px;
+    }
+  }
 }
 
 .workbench-analysis-formula-tooltip {

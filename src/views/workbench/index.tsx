@@ -12,14 +12,18 @@ import { StoreState } from '@/redux';
 import XLSX, { WorkBook } from 'xlsx';
 import BScroll, { BScrollInstance } from 'better-scroll';
 import Analysis from './analysis';
+import Result from './result';
 import { fetchTestFile } from '@/lib/util';
 
 const { Content } = Layout;
 
-interface TableDataRow {
+export interface TableDataRow {
   id: string;
   [key: string]: any;
 }
+// interface ColumnMore {
+//   editable?: boolean;
+// }
 export type TableData = TableDataRow[];
 export type TableColumn = ColumnType<object>;
 export type TableColumns = ColumnsType<object>;
@@ -299,7 +303,8 @@ class Workbench extends React.Component<IProps, IState> {
               sticky={true}
             />
         
-            <Analysis columns={this.state.tableColumns} columnsMap={headerMap} data={ this.state.tableData } />
+            {/* <Analysis columns={this.state.tableColumns} columnsMap={headerMap} data={ this.state.tableData } /> */}
+            <Result outerColumns={this.state.tableColumns} outerData={ this.state.tableData }></Result>
           </div>
           
         </Content>
