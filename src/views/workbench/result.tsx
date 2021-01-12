@@ -1,7 +1,7 @@
 import React from 'react';
 import { TableColumnsMap, TableColumns, TableDataRow } from './index';
 import { Table, Button, Select } from 'antd';
-import { columnsA, getColumnsB } from './result-columns';
+import { columnsA, getColumnsB, getColumnsC } from './result-columns';
 import XLSX, { Sheet, ColInfo } from 'xlsx';
 
 interface TableDataRowBasisA {
@@ -26,6 +26,17 @@ interface TableDataRowBasisB {
   completeRate?: number;
 };
 interface TableDataRowB extends TableDataRowBasisB, TableDataRow { }
+
+interface TableDataRowBasisC {
+  unitName: string;
+  personCount?: number;
+  personCourseCount: number;
+  rate?: number;
+  totalHours: number;
+  averHours?: number;
+}
+interface TableDataRowC extends TableDataRowBasisC, TableDataRow { }
+
 
 type ToolbarConfigItemKeyType = 'month' | 'project' | 'role' |
   'manage' | 'product' | 'hours' | 'totalPersonCount' |
@@ -56,6 +67,8 @@ interface IState {
   tableColumnsA: TableColumns;
   tableDataB: TableDataRowB[];
   tableColumnsB: TableColumns;
+  tableDataC: TableDataRowC[];
+  tableColumnsC: TableColumns;
   selectedColumnsMap: {
     month: string;
     project: string;
@@ -78,6 +91,8 @@ class Result extends React.Component<IProps, IState> {
       tableColumnsA: columnsA,
       tableDataB: [],
       tableColumnsB: getColumnsB(this),
+      tableDataC: [],
+      tableColumnsC: getColumnsC(this),
       selectedColumnsMap: {
         month: 'B',
         project: 'H',
@@ -93,11 +108,11 @@ class Result extends React.Component<IProps, IState> {
     };
   }
 
-  componentDidUpdate(prevProps: IProps, prevState: IState) {
-    if (prevProps.outerColumns !== this.props.outerColumns) {
-      console.log(this.props.outerColumns);
-    }
-  }
+  // componentDidUpdate(prevProps: IProps, prevState: IState) {
+  //   if (prevProps.outerColumns !== this.props.outerColumns) {
+  //     console.log(this.props.outerColumns);
+  //   }
+  // }
 
   // 生成表格 A
   calcDataA() {
@@ -233,10 +248,65 @@ class Result extends React.Component<IProps, IState> {
     this.setState({ tableDataB: dataB });
   }
 
+  // 生成表格 C
+  calcDataC() {
+    let idCount: number = Date.now();
+    const scmap = this.state.selectedColumnsMap;
+
+    const mapC: Map<number, TableDataRowBasisC> = new Map();
+    const filterSet: Set<string> = new Set(['见习', '一星', '二星', '三星', '四星', '五星']);
+    const isExisted: Set<string> = new Set();
+    this.props.outerData.forEach(item => {
+      if (filterSet.has(item.W)) {
+        const month = new Date(item[scmap.month]).getMonth() + 1;
+        const hash: string = (item.T + month).toString();
+
+        if (!isExisted.has(hash)) {
+          isExisted.add(hash);
+
+          if (mapC.has(month)) {
+            const old = mapC.get(month);
+            if (old) {
+              old.personCourseCount += 1;
+              old.totalHours += +item[scmap.hours];
+            }
+          } else {
+            mapC.set(month, {
+              unitName: item[scmap.unitName],
+              personCourseCount: 1,
+              totalHours: +item[scmap.hours],
+            });
+          }
+        } else {
+          if (mapC.has(month)) {
+            const old = mapC.get(month);
+            if (old) {
+              old.totalHours += +item[scmap.hours];
+            }
+          }
+        }
+      }
+    });
+
+    const dataC: TableDataRowC[] = [];
+    for (let [key, params] of mapC.entries()) {
+      dataC.push({
+        id: (idCount++).toString(),
+        ...params,
+        month: +key,
+        averHours: params.totalHours / params.personCourseCount
+      });
+    }
+
+    dataC.sort((a, b) => a.month - b.month);
+    this.setState({ tableDataC: dataC });
+  }
+
   // 计算表格
   handleCalc = () => {
     this.calcDataA();
     this.calcDataB();
+    this.calcDataC();
   }
 
   // 导出
@@ -247,6 +317,9 @@ class Result extends React.Component<IProps, IState> {
 
     const sheetB = this.getExportSheet(this.state.tableColumnsB, this.state.tableDataB);
     XLSX.utils.book_append_sheet(wb, sheetB, '培训基本情况表');
+
+    const sheetC = this.getExportSheet(this.state.tableColumnsC, this.state.tableDataC);
+    XLSX.utils.book_append_sheet(wb, sheetC, '培训师情况表');
 
     XLSX.writeFile(wb, 'output.xlsx');
   }
@@ -286,49 +359,59 @@ class Result extends React.Component<IProps, IState> {
     return (
       <div className="workbench-result">
         <div className="workbench-result-toolbar">
-          <div className="workbench-result-btns">
+          <div className="workbench-result-btns mg-b-10">
             <Button type="primary" size="small" onClick={() => this.handleCalc()}>生成</Button>
             <Button size="small" onClick={ () => this.handleExport() }>导出</Button>
           </div>
 
-          <div className="workbench-result-config">
-            {
-              toolbarConfigItems.map((item) => (
-                <Select
-                  className="workbench-result-config-item"
-                  key={item.key}
-                  data-label={item.key}
-                  size="small"
-                  placeholder={`选择${item.label}`}
-                  options={selectOptions}
-                  value={this.state.selectedColumnsMap[item.key]}
-                >
-                </Select>
-              ))
-            }
-            
-          </div>
+          {
+            /* <div className="workbench-result-config">
+              {
+                toolbarConfigItems.map((item) => (
+                  <Select
+                    className="workbench-result-config-item"
+                    key={item.key}
+                    data-label={item.key}
+                    size="small"
+                    placeholder={`选择${item.label}`}
+                    options={selectOptions}
+                    value={this.state.selectedColumnsMap[item.key]}
+                  >
+                  </Select>
+                ))
+              }
+            </div> */
+          }
         </div>
-        <Table
-          columns={this.state.tableColumnsA}
-          dataSource={this.state.tableDataA}
-          size="small"
-          bordered
-          rowKey="id"
-          pagination={false}
-          sticky={true}
-          scroll={{ x: 'max-content' }}
-        ></Table>
-        <Table
-          columns={this.state.tableColumnsB}
-          dataSource={this.state.tableDataB}
-          size="small"
-          bordered
-          rowKey="id"
-          pagination={false}
-          sticky={true}
-          scroll={{ x: 'max-content' }}
-        ></Table>
+        <div className="workbench-result-tables">
+          <Table
+            columns={this.state.tableColumnsA}
+            dataSource={this.state.tableDataA}
+            size="small"
+            bordered
+            rowKey="id"
+            pagination={false}
+            scroll={{ x: 'max-content' }}
+          ></Table>
+          <Table
+            columns={this.state.tableColumnsB}
+            dataSource={this.state.tableDataB}
+            size="small"
+            bordered
+            rowKey="id"
+            pagination={false}
+            scroll={{ x: 'max-content' }}
+          ></Table>
+          <Table
+            columns={this.state.tableColumnsC}
+            dataSource={this.state.tableDataC}
+            size="small"
+            bordered
+            rowKey="id"
+            pagination={false}
+            scroll={{ x: 'max-content' }}
+          ></Table>
+        </div>
       </div>
     );
   }

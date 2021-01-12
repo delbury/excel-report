@@ -302,7 +302,7 @@ class Workbench extends React.Component<IProps, IState> {
               dataSource={this.state.tableData}
               size="small"
               bordered
-              scroll={{ x: 'max-content', y: 300 }}
+              scroll={{ x: 'max-content', y: 100 }}
               rowKey="id"
               pagination={false}
               sticky={true}

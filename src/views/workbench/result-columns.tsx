@@ -185,3 +185,78 @@ export function getColumnsB(that: Result): TableColumns {
     },
   ];
 }
+
+export function getColumnsC(that: Result): TableColumns {
+  return [
+    {
+      title: '单位',
+      key: 'unitName',
+      dataIndex: 'unitName',
+      ellipsis: true,
+      width: 120,
+      fixed: 'left',
+    },
+    {
+      title: '月份',
+      key: 'month',
+      dataIndex: 'month',
+      ellipsis: true,
+      width: 60,
+      fixed: 'left',
+    },
+    {
+      title: '培训师人数',
+      key: 'personCount',
+      dataIndex: 'personCount',
+      ellipsis: true,
+      width: 100,
+      render: (text, record, index) => {
+        return (
+          <Input
+            type="number"
+            size="small"
+            min={0}
+            step={1}
+            onChange={(ev) => {
+              const value: number = +ev.target.value;
+              const rows = [...that.state.tableDataC];
+              rows[index].personCount = value;
+              rows[index].rate = value ? rows[index].personCourseCount / value : undefined;
+
+              rows.forEach((row, index) => {
+               
+              });
+              that.setState({ tableDataC: rows });
+            }}></Input>);
+      }
+    },
+    {
+      title: '培训师人授课数',
+      key: 'personCourseCount',
+      dataIndex: 'personCourseCount',
+      ellipsis: true,
+      width: 100,
+    },
+    {
+      title: '培训师利用率',
+      key: 'rate',
+      dataIndex: 'rate',
+      ellipsis: true,
+      width: 100,
+    },
+    {
+      title: '总授课学时',
+      key: 'totalHours',
+      dataIndex: 'totalHours',
+      ellipsis: true,
+      width: 100,
+    },
+    {
+      title: '人均授课学时',
+      key: 'averHours',
+      dataIndex: 'averHours',
+      ellipsis: true,
+      width: 100,
+    },
+  ];
+};

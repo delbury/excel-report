@@ -125,7 +125,15 @@ $border-base: 1px solid rgb(240, 242, 245);
   }
 
   &-result {
+    display: flex;
+    flex-direction: column;
     flex: 1;
+    overflow: hidden;
+
+    &-tables {
+      flex: 1;
+      overflow: auto;
+    }
 
     &-toolbar {
       padding: 10px;
