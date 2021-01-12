@@ -151,6 +151,7 @@ class Result extends React.Component<IProps, IState> {
         id: (idCount++).toString(),
         ...params,
         month: key,
+        monthName: key + '月',
       });
     }
     dataA.sort((a, b) => a.month - b.month);
@@ -222,6 +223,7 @@ class Result extends React.Component<IProps, IState> {
       dataB.push({
         id: (idCount++).toString(),
         ...params,
+        monthName: params.month + '月',
       });
     }
 
@@ -294,7 +296,8 @@ class Result extends React.Component<IProps, IState> {
         id: (idCount++).toString(),
         ...params,
         month: +key,
-        averHours: params.totalHours / params.personCourseCount
+        averHours: params.totalHours / params.personCourseCount,
+        monthName: key + '月',
       });
     }
 
@@ -359,8 +362,9 @@ class Result extends React.Component<IProps, IState> {
     return (
       <div className="workbench-result">
         <div className="workbench-result-toolbar">
-          <div className="workbench-result-btns mg-b-10">
-            <Button type="primary" size="small" onClick={() => this.handleCalc()}>生成</Button>
+          <div className="workbench-result-btns">
+            <Button type="primary" size="small" onClick={() => this.handleCalc()}>分析月度培训明细表</Button>
+            <Button type="primary" size="small" onClick={() => null}>分析必知必会评估明细表</Button>
             <Button size="small" onClick={ () => this.handleExport() }>导出</Button>
           </div>
 

@@ -14,8 +14,8 @@ export const columnsA: TableColumns = [
   },
   {
     title: '月份',
-    key: 'month',
-    dataIndex: 'month',
+    key: 'monthName',
+    dataIndex: 'monthName',
     ellipsis: true,
     width: 80,
     fixed: 'left',
@@ -90,8 +90,8 @@ export function getColumnsB(that: Result): TableColumns {
     },
     {
       title: '月份',
-      key: 'month',
-      dataIndex: 'month',
+      key: 'monthName',
+      dataIndex: 'monthName',
       ellipsis: true,
       width: 60,
       fixed: 'left',
@@ -198,8 +198,8 @@ export function getColumnsC(that: Result): TableColumns {
     },
     {
       title: '月份',
-      key: 'month',
-      dataIndex: 'month',
+      key: 'monthName',
+      dataIndex: 'monthName',
       ellipsis: true,
       width: 60,
       fixed: 'left',
