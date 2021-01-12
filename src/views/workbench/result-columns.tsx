@@ -9,37 +9,42 @@ export const columnsA: TableColumns = [
     key: 'unitName',
     dataIndex: 'unitName',
     ellipsis: true,
+    width: 120,
   },
   {
     title: '月份',
     key: 'month',
     dataIndex: 'month',
     ellipsis: true,
-    width: '80px'
+    width: 80
   },
   {
     title: '培训项目数',
     key: 'trainProjectCount',
     dataIndex: 'trainProjectCount',
     ellipsis: true,
+    width: 100,
   },
   {
     title: '培训总人次',
     key: 'trainPersonCount',
     dataIndex: 'trainPersonCount',
     ellipsis: true,
+    width: 100,
   },
   {
     title: '理论培训课时',
     key: 'theoryHours',
     dataIndex: 'theoryHours',
     ellipsis: true,
+    width: 100,
   },
   {
     title: '实操培训课时',
     key: 'practiceHours',
     dataIndex: 'practiceHours',
     ellipsis: true,
+    width: 100,
   },
   // {
   //   title: '评估项目数',
@@ -63,66 +68,71 @@ export const columnsA: TableColumns = [
 
 // export const columnsB: TableColumns = [];
 
-export function getColumnsB(): TableColumns {
+export function getColumnsB(that: Result): TableColumns {
   return [
     {
       title: '单位',
       key: 'unitName',
       dataIndex: 'unitName',
       ellipsis: true,
+      width: 120,
     },
     {
       title: '岗位',
       key: 'station',
       dataIndex: 'station',
       ellipsis: true,
+      width: 120,
     },
     {
       title: '月份',
       key: 'month',
       dataIndex: 'month',
       ellipsis: true,
-      width: '80px',
+      width: 60,
     },
     {
       title: '现员人数',
       key: 'nowPersonCount',
       dataIndex: 'nowPersonCount',
       ellipsis: true,
+      width: 100,
       render: (text, record, index) => {
-        // @ts-ignore
-        return (<Input type="number" size="small" onChange={(ev) => {
-          const value: number = +ev.target.value;
-          // @ts-ignore
-          const rows = [...this.state.tableDataB];
-          rows[index].nowPersonCount = value;
-          rows[index].averTrainHours = value ? rows[index].trainHours / value : undefined;
-          
-          let lastM = -1;
-          let lastP = -1;
-          rows.forEach((row, index) => {
-            if (row.type === 'M') {
-              if (lastM < 0) {
-                rows[index].yearAverHours = rows[index].averTrainHours ?? 0;
-              } else {
-                rows[index].yearAverHours = rows[index].averTrainHours ?? 0 + rows[lastM].averTrainHours;
-              }
-              rows[index].completeRate = rows[index].yearAverHours / 42;
-              lastM = index;
-            } else if (row.type === 'P') {
-              if (lastP < 0) {
-                rows[index].yearAverHours = rows[index].averTrainHours ?? 0;
-              } else {
-                rows[index].yearAverHours = rows[index].averTrainHours ?? 0 + rows[lastP].averTrainHours;
-              }
-              rows[index].completeRate = rows[index].yearAverHours / 60;
-              lastP = index;
-            }
-          });
+        return (
+          <Input
+            type="number"
+            size="small"
+            min={0}
+            step={1}
+            onChange={(ev) => {
+              const value: number = +ev.target.value;
+              const rows = [...that.state.tableDataB];
+              rows[index].nowPersonCount = value;
+              rows[index].averTrainHours = value ? rows[index].trainHours / value : undefined;
 
-          // @ts-ignore
-          this.setState({ tableDataB: rows });
-        }}></Input>);
+              let lastM = -1;
+              let lastP = -1;
+              rows.forEach((row, index) => {
+                if (row.type === 'M') {
+                  if (lastM < 0) {
+                    rows[index].yearAverHours = rows[index].averTrainHours ?? 0;
+                  } else {
+                    rows[index].yearAverHours = (rows[index].averTrainHours ?? 0) + (rows[lastM].averTrainHours ?? 0);
+                  }
+                  rows[index].completeRate = (rows[index].yearAverHours ?? 0) / 42;
+                  lastM = index;
+                } else if (row.type === 'P') {
+                  if (lastP < 0) {
+                    rows[index].yearAverHours = rows[index].averTrainHours ?? 0;
+                  } else {
+                    rows[index].yearAverHours = (rows[index].averTrainHours ?? 0) + (rows[lastP].averTrainHours ?? 0);
+                  }
+                  rows[index].completeRate = (rows[index].yearAverHours ?? 0) / 60;
+                  lastP = index;
+                }
+              });
+              that.setState({ tableDataB: rows });
+            }}></Input>);
       }
     },
     {
@@ -130,36 +140,42 @@ export function getColumnsB(): TableColumns {
       key: 'trainHours',
       dataIndex: 'trainHours',
       ellipsis: true,
+      width: 80,
     },
     {
       title: '培训条数',
       key: 'trainCount',
       dataIndex: 'trainCount',
       ellipsis: true,
+      width: 80,
     },
     {
       title: '培训人次',
       key: 'trainPersonCount',
       dataIndex: 'trainPersonCount',
       ellipsis: true,
+      width: 80,
     },
     {
       title: '人均培训课时（小时）',
       key: 'averTrainHours',
       dataIndex: 'averTrainHours',
       ellipsis: true,
+      width: 120,
     },
     {
       title: '年度累计人均课时（小时）',
       key: 'yearAverHours',
       dataIndex: 'yearAverHours',
       ellipsis: true,
+      width: 120,
     },
     {
       title: '年度培训课时完成率',
       key: 'completeRate',
       dataIndex: 'completeRate',
       ellipsis: true,
+      width: 120,
     },
   ];
 }

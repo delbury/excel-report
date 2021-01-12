@@ -101,7 +101,7 @@ class Workbench extends React.Component<IProps, IState> {
 
     // 加载完成
     fileReader.onload = ev => {
-      this.workbook = XLSX.read(fileReader.result, { type: 'array' });
+      this.workbook = XLSX.read(fileReader.result, { type: 'array', cellDates: true });
       this.setState({
         sheetNames: [...this.workbook.SheetNames],
         currentSheet: this.workbook.SheetNames.length ? this.workbook.SheetNames[0] : '',
@@ -221,7 +221,11 @@ class Workbench extends React.Component<IProps, IState> {
       
       // 列
       for (let c of validCols.values()) {
-        rowData[c] = sheet[c + r]?.w ?? '';
+        if (sheet[c + r]?.t === 'd') {
+          rowData[c] = sheet[c + r].v.toLocaleDateString();
+        } else {
+          rowData[c] = sheet[c + r]?.w ?? '';
+        }
       }
 
       body.push(rowData);
@@ -259,9 +263,10 @@ class Workbench extends React.Component<IProps, IState> {
   }
 
   // 测试
-  async test() {
-    const blob = await fetchTestFile(); // 获取测试文件
-    this.loadFile(blob);
+  test() {
+    fetchTestFile().then(blob => {
+      this.loadFile(blob);
+    }).catch(err => console.log(err)); // 获取测试文件
   }
 
   render() {
