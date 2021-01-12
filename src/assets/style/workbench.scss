@@ -127,8 +127,28 @@ $border-base: 1px solid rgb(240, 242, 245);
   &-result {
     flex: 1;
 
-    &-btns {
+    &-toolbar {
       padding: 10px;
+      padding-bottom: 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    &-config {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+
+      &-item {
+        width: 120px;
+        margin-left: 10px !important;
+        margin-bottom: 10px !important;
+      }
+    }
+
+    &-btns {
+      margin-right: 50px;
+      flex-shrink: 0;
 
       >button:not(:last-of-type) {
         margin-right: 10px;

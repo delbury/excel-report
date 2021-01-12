@@ -10,13 +10,15 @@ export const columnsA: TableColumns = [
     dataIndex: 'unitName',
     ellipsis: true,
     width: 120,
+    fixed: 'left',
   },
   {
     title: '月份',
     key: 'month',
     dataIndex: 'month',
     ellipsis: true,
-    width: 80
+    width: 80,
+    fixed: 'left',
   },
   {
     title: '培训项目数',
@@ -76,6 +78,7 @@ export function getColumnsB(that: Result): TableColumns {
       dataIndex: 'unitName',
       ellipsis: true,
       width: 120,
+      fixed: 'left',
     },
     {
       title: '岗位',
@@ -83,6 +86,7 @@ export function getColumnsB(that: Result): TableColumns {
       dataIndex: 'station',
       ellipsis: true,
       width: 120,
+      fixed: 'left',
     },
     {
       title: '月份',
@@ -90,6 +94,7 @@ export function getColumnsB(that: Result): TableColumns {
       dataIndex: 'month',
       ellipsis: true,
       width: 60,
+      fixed: 'left',
     },
     {
       title: '现员人数',
@@ -97,6 +102,7 @@ export function getColumnsB(that: Result): TableColumns {
       dataIndex: 'nowPersonCount',
       ellipsis: true,
       width: 100,
+      fixed: 'left',
       render: (text, record, index) => {
         return (
           <Input

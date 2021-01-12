@@ -309,7 +309,7 @@ class Workbench extends React.Component<IProps, IState> {
             />
         
             {/* <Analysis columns={this.state.tableColumns} columnsMap={headerMap} data={ this.state.tableData } /> */}
-            <Result outerColumns={this.state.tableColumns} outerData={ this.state.tableData }></Result>
+            <Result outerColumns={ this.state.tableColumns } outerData={ this.state.tableData }></Result>
           </div>
           
         </Content>

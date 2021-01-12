@@ -1,7 +1,6 @@
 import React from 'react';
 import { TableColumnsMap, TableColumns, TableDataRow } from './index';
-import { Table, Button } from 'antd';
-import { ColumnsType, ColumnType } from 'antd/es/table';
+import { Table, Button, Select } from 'antd';
 import { columnsA, getColumnsB } from './result-columns';
 import XLSX, { Sheet, ColInfo } from 'xlsx';
 
@@ -28,6 +27,25 @@ interface TableDataRowBasisB {
 };
 interface TableDataRowB extends TableDataRowBasisB, TableDataRow { }
 
+type ToolbarConfigItemKeyType = 'month' | 'project' | 'role' |
+  'manage' | 'product' | 'hours' | 'totalPersonCount' |
+  'theoryHours' | 'practiceHours' | 'unitName'
+interface ToolbarConfigItem {
+  label: string;
+  key: ToolbarConfigItemKeyType;
+}
+const toolbarConfigItems: ToolbarConfigItem[] = [
+  { label: '月份', key: 'month' },
+  { label: '培训项目名称', key: 'project' },
+  { label: '角色', key: 'role' },
+  { label: '管理和业务技术', key: 'manage' },
+  { label: '生产人员', key: 'product' },
+  { label: '总课时', key: 'hours' },
+  { label: '总人数', key: 'totalPersonCount' },
+  { label: '理论课时', key: 'theoryHours' },
+  { label: '实操课时', key: 'practiceHours' },
+  { label: '单位', key: 'unitName' },
+];
 
 interface IProps {
   outerData: TableDataRow[];
@@ -38,6 +56,18 @@ interface IState {
   tableColumnsA: TableColumns;
   tableDataB: TableDataRowB[];
   tableColumnsB: TableColumns;
+  selectedColumnsMap: {
+    month: string;
+    project: string;
+    role: string;
+    manage: string;
+    product: string;
+    hours: string;
+    totalPersonCount: string;
+    theoryHours: string;
+    practiceHours: string;
+    unitName: string;
+  };
 }
 
 class Result extends React.Component<IProps, IState> {
@@ -48,34 +78,53 @@ class Result extends React.Component<IProps, IState> {
       tableColumnsA: columnsA,
       tableDataB: [],
       tableColumnsB: getColumnsB(this),
+      selectedColumnsMap: {
+        month: 'B',
+        project: 'H',
+        role: 'V',
+        manage: 'Y',
+        product: 'AA',
+        hours: 'AG',
+        totalPersonCount: 'AD',
+        theoryHours: 'AE',
+        practiceHours: 'AF',
+        unitName: 'F',
+      },
     };
+  }
+
+  componentDidUpdate(prevProps: IProps, prevState: IState) {
+    if (prevProps.outerColumns !== this.props.outerColumns) {
+      console.log(this.props.outerColumns);
+    }
   }
 
   // 生成表格 A
   calcDataA() {
     let idCount: number = Date.now();
+    const scmap = this.state.selectedColumnsMap;
 
     const mapA: Map<number, TableDataRowBasisA> = new Map();
     this.props.outerData.forEach(item => {
-      if (item.V === '培训师' && item.H === '必知必会培训') {
-        const month = new Date(item.B).getMonth() + 1;
+      if (item[scmap.role] === '培训师' && item[scmap.project] === '必知必会培训') {
+        const month = new Date(item[scmap.month]).getMonth() + 1;
 
         if (mapA.has(month)) {
           const old = mapA.get(month);
           if (old) {
             old.trainProjectCount += 1;
-            old.trainPersonCount += +item.AD;
-            old.theoryHours += +item.AE;
-            old.practiceHours += +item.AF;
+            old.trainPersonCount += +item[scmap.totalPersonCount];
+            old.theoryHours += +item[scmap.theoryHours];
+            old.practiceHours += +item[scmap.practiceHours];
           }
 
         } else {
           mapA.set(month, {
             trainProjectCount: 1,
-            trainPersonCount: +item.AD,
-            theoryHours: +item.AE,
-            practiceHours: +item.AF,
-            unitName: item.F,
+            trainPersonCount: +item[scmap.totalPersonCount],
+            theoryHours: +item[scmap.theoryHours],
+            practiceHours: +item[scmap.practiceHours],
+            unitName: item[scmap.unitName],
           });
         }
       }
@@ -97,14 +146,15 @@ class Result extends React.Component<IProps, IState> {
   // 生成表格 B
   calcDataB() {
     let idCount: number = Date.now();
+    const scmap = this.state.selectedColumnsMap;
 
     const mapB: Map<string, TableDataRowBasisB> = new Map();
     this.props.outerData.forEach(item => {
-      if (item.V === '培训师') {
+      if (item[scmap.role] === '培训师') {
         // M：管理，P：生产
-        const month = new Date(item.B).getMonth() + 1;
-        const countM = +item.Y;
-        const countP = +item.AA;
+        const month = new Date(item[scmap.month]).getMonth() + 1;
+        const countM = +item[scmap.manage];
+        const countP = +item[scmap.product];
         
         if (countM > 0) {
           const key = month + 'M';
@@ -112,7 +162,7 @@ class Result extends React.Component<IProps, IState> {
             const old = mapB.get(key);
             if (old) {
               old.trainCount += 1;
-              old.trainHours += countM * +item.AG;
+              old.trainHours += countM * +item[scmap.hours];
               old.trainPersonCount += countM;
             }
           } else {
@@ -121,9 +171,9 @@ class Result extends React.Component<IProps, IState> {
               station: '管理和业务技术',
               month,
               trainCount: 1,
-              trainHours: countM * +item.AG,
+              trainHours: countM * +item[scmap.hours],
               trainPersonCount: countM,
-              unitName: item.F,
+              unitName: item[scmap.unitName],
             });
           }
         }
@@ -134,7 +184,7 @@ class Result extends React.Component<IProps, IState> {
             const old = mapB.get(key);
             if (old) {
               old.trainCount += 1;
-              old.trainHours += countP * +item.AG;
+              old.trainHours += countP * +item[scmap.hours];
               old.trainPersonCount += countP;
             }
           } else {
@@ -143,9 +193,9 @@ class Result extends React.Component<IProps, IState> {
               station: '生产人员',
               month,
               trainCount: 1,
-              trainHours: countP * +item.AG,
+              trainHours: countP * +item[scmap.hours],
               trainPersonCount: countP,
-              unitName: item.F,
+              unitName: item[scmap.unitName],
             });
           }
         }
@@ -193,10 +243,10 @@ class Result extends React.Component<IProps, IState> {
   handleExport = () => {
     const wb = XLSX.utils.book_new();
     const sheetA = this.getExportSheet(this.state.tableColumnsA, this.state.tableDataA);
-    XLSX.utils.book_append_sheet(wb, sheetA, '表A');
+    XLSX.utils.book_append_sheet(wb, sheetA, '核心技能情况表');
 
     const sheetB = this.getExportSheet(this.state.tableColumnsB, this.state.tableDataB);
-    XLSX.utils.book_append_sheet(wb, sheetB, '表B');
+    XLSX.utils.book_append_sheet(wb, sheetB, '培训基本情况表');
 
     XLSX.writeFile(wb, 'output.xlsx');
   }
@@ -228,11 +278,36 @@ class Result extends React.Component<IProps, IState> {
   }
 
   render() {
+    const selectOptions = this.props.outerColumns.map(item => ({
+      label: (item.title ?? '').toString(),
+      value: (item.key ?? '').toString(),
+      key: (item.key ?? '').toString(),
+    }));
     return (
       <div className="workbench-result">
-        <div className="workbench-result-btns">
-          <Button type="primary" size="small" onClick={() => this.handleCalc()}>生成</Button>
-          <Button size="small" onClick={ () => this.handleExport() }>导出</Button>
+        <div className="workbench-result-toolbar">
+          <div className="workbench-result-btns">
+            <Button type="primary" size="small" onClick={() => this.handleCalc()}>生成</Button>
+            <Button size="small" onClick={ () => this.handleExport() }>导出</Button>
+          </div>
+
+          <div className="workbench-result-config">
+            {
+              toolbarConfigItems.map((item) => (
+                <Select
+                  className="workbench-result-config-item"
+                  key={item.key}
+                  data-label={item.key}
+                  size="small"
+                  placeholder={`选择${item.label}`}
+                  options={selectOptions}
+                  value={this.state.selectedColumnsMap[item.key]}
+                >
+                </Select>
+              ))
+            }
+            
+          </div>
         </div>
         <Table
           columns={this.state.tableColumnsA}
