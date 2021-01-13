@@ -1,8 +1,8 @@
 import React from 'react';
 import { TableColumns, TableDataRow } from './index';
-import { Table, Button, Select, Tabs } from 'antd';
+import { Table, Button, Select, Tabs, List } from 'antd';
 import { columnsA, getColumnsB, getColumnsC, columnsD } from './result-columns';
-import XLSX, { Sheet, ColInfo } from 'xlsx';
+import XLSX, { Sheet, ColInfo, WorkBook } from 'xlsx';
 import {
   TableDataRowA,
   TableDataRowB,
@@ -60,9 +60,19 @@ interface IState {
     practiceHours: string;
     unitName: string;
   };
+  filters: {
+    table1: string;
+    table2: string;
+  };
+  currentFilterKeyword: string;
+  filtersOptions: {
+    label: string;
+    value: string;
+  }[];
 }
 
 class Result extends React.Component<IProps, IState> {
+  idCount: number = Date.now();
   constructor(props: IProps) {
     super(props);
     this.state = {
@@ -86,23 +96,37 @@ class Result extends React.Component<IProps, IState> {
         practiceHours: 'AF',
         unitName: 'F',
       },
+      filters: {
+        table1: 'G',
+        table2: 'H',
+      },
+      currentFilterKeyword: '',
+      filtersOptions: [],
     };
   }
 
   // componentDidUpdate(prevProps: IProps, prevState: IState) {
-  //   if (prevProps.outerColumns !== this.props.outerColumns) {
-  //     console.log(this.props.outerColumns);
+  //   if (this.props.outerData !== prevProps.outerData) {
+  //     const set: Set<string> = new Set();
+  //     this.props.outerData.forEach(item => set.add(item[this.state.filters.table1]));
+  //     const options = [];
+  //     for (let val of set.values()) {
+  //       options.push({
+  //         label: val,
+  //         value: val,
+  //       });
+  //     }
+  //     this.setState({ filtersOptions: options });
   //   }
   // }
 
   // 生成表格 A
-  calcDataA() {
-    let idCount: number = Date.now();
+  calcDataA(condition?: string) {
     const scmap = this.state.selectedColumnsMap;
 
     const mapA: Map<number, TableDataRowBasisA> = new Map();
     this.props.outerData.forEach(item => {
-      if (item[scmap.role] === '培训师' && item[scmap.project] === '必知必会培训') {
+      if (item[scmap.role] === '培训师' && item[scmap.project] === '必知必会培训' && (!condition || item.G === condition)) {
         const month = new Date(item[scmap.month]).getMonth() + 1;
 
         if (mapA.has(month)) {
@@ -112,6 +136,7 @@ class Result extends React.Component<IProps, IState> {
             old.trainPersonCount += +item[scmap.totalPersonCount];
             old.theoryHours += +item[scmap.theoryHours];
             old.practiceHours += +item[scmap.practiceHours];
+            old.remarks?.add(item.J);
           }
 
         } else {
@@ -120,7 +145,9 @@ class Result extends React.Component<IProps, IState> {
             trainPersonCount: +item[scmap.totalPersonCount],
             theoryHours: +item[scmap.theoryHours],
             practiceHours: +item[scmap.practiceHours],
-            unitName: item[scmap.unitName],
+            unitName: condition ? condition : item[scmap.unitName],
+            remarks: new Set([item.J]),
+            isCondition: !!condition,
           });
         }
       }
@@ -129,25 +156,26 @@ class Result extends React.Component<IProps, IState> {
     const dataA: TableDataRowA[] = [];
     for (let [key, params] of mapA.entries()) {
       dataA.push({
-        id: (idCount++).toString(),
+        id: (this.idCount++).toString(),
         ...params,
         month: key,
         monthName: key + '月',
+        remarksText: Array.from(params.remarks ?? []).join('、')
       });
     }
     dataA.sort((a, b) => a.month - b.month);
 
-    this.setState({ tableDataA: dataA });
+    !condition && this.setState({ tableDataA: dataA });
+    return dataA;
   }
 
   // 生成表格 B
-  calcDataB() {
-    let idCount: number = Date.now();
+  calcDataB(condition?: string) {
     const scmap = this.state.selectedColumnsMap;
 
     const mapB: Map<string, TableDataRowBasisB> = new Map();
     this.props.outerData.forEach(item => {
-      if (item[scmap.role] === '培训师') {
+      if (item[scmap.role] === '培训师' && (!condition || item.G === condition)) {
         // M：管理，P：生产
         const month = new Date(item[scmap.month]).getMonth() + 1;
         const countM = +item[scmap.manage];
@@ -170,7 +198,8 @@ class Result extends React.Component<IProps, IState> {
               trainCount: 1,
               trainHours: countM * +item[scmap.hours],
               trainPersonCount: countM,
-              unitName: item[scmap.unitName],
+              unitName: condition ? condition : item[scmap.unitName],
+              isCondition: !!condition,
             });
           }
         }
@@ -192,7 +221,8 @@ class Result extends React.Component<IProps, IState> {
               trainCount: 1,
               trainHours: countP * +item[scmap.hours],
               trainPersonCount: countP,
-              unitName: item[scmap.unitName],
+              unitName: condition ? condition : item[scmap.unitName],
+              isCondition: !!condition,
             });
           }
         }
@@ -202,7 +232,7 @@ class Result extends React.Component<IProps, IState> {
     const dataB: TableDataRowB[] = [];
     for (let [key, params] of mapB.entries()) {
       dataB.push({
-        id: (idCount++).toString(),
+        id: (this.idCount++).toString(),
         ...params,
         monthName: params.month + '月',
       });
@@ -228,19 +258,19 @@ class Result extends React.Component<IProps, IState> {
     //   }
     // });
 
-    this.setState({ tableDataB: dataB });
+    !condition && this.setState({ tableDataB: dataB });
+    return dataB;
   }
 
   // 生成表格 C
-  calcDataC() {
-    let idCount: number = Date.now();
+  calcDataC(condition?: string) {
     const scmap = this.state.selectedColumnsMap;
 
     const mapC: Map<number, TableDataRowBasisC> = new Map();
     const filterSet: Set<string> = new Set(['见习', '一星', '二星', '三星', '四星', '五星']);
     const isExisted: Set<string> = new Set();
     this.props.outerData.forEach(item => {
-      if (filterSet.has(item.W)) {
+      if (filterSet.has(item.W) && (!condition || item.G === condition)) {
         const month = new Date(item[scmap.month]).getMonth() + 1;
         const hash: string = (item.T + month).toString();
 
@@ -255,9 +285,10 @@ class Result extends React.Component<IProps, IState> {
             }
           } else {
             mapC.set(month, {
-              unitName: item[scmap.unitName],
+              unitName: condition ? condition : item[scmap.unitName],
               personCourseCount: 1,
               totalHours: +item[scmap.hours],
+              isCondition: !!condition,
             });
           }
         } else {
@@ -274,7 +305,7 @@ class Result extends React.Component<IProps, IState> {
     const dataC: TableDataRowC[] = [];
     for (let [key, params] of mapC.entries()) {
       dataC.push({
-        id: (idCount++).toString(),
+        id: (this.idCount++).toString(),
         ...params,
         month: +key,
         averHours: params.totalHours / params.personCourseCount,
@@ -283,46 +314,183 @@ class Result extends React.Component<IProps, IState> {
     }
 
     dataC.sort((a, b) => a.month - b.month);
-    this.setState({ tableDataC: dataC });
+    !condition && this.setState({ tableDataC: dataC });
+    return dataC;
   }
 
   // 计算表格 D
-  calcDataD() {
-    let idCount: number = Date.now();
+  calcDataD(condition?: string) {
     const scmap = this.state.selectedColumnsMap;
 
     const mapD: Map<number, TableDataRowBasisD> = new Map();
+    const filterSet: Set<string> = new Set([
+      '【所有专业】设备维保必知必会安全红线',
+      '【所有专业】设备维保必知必会应急处置类通用知识',
+      '【站台门】基础知识',
+      '【站台门】安全回路异常中断',
+      '【站台门】信号系统无法控制屏蔽门联动开关',
+      '【站台门】整侧滑动门多级无法开关',
+      '【综合监控】基础知识',
+      '【综合监控】网络中断',
+      '【消防】FAS主机及工作站',
+      '【消防】气灭',
+      '【消防】水消防',
+      '【消防】起火冒烟、FAS联动故障',
+      '【消防】区间、车站消防爆管',
+      '【消防】气灭误喷',
+      '【电梯】基础知识',
+      '【电梯】乘客电梯困人',
+      '【给排水】控制柜',
+      '【给排水】水泵',
+      '【给排水】防汛应急设备',
+      '【给排水】区间积水',
+      '【通风】通风基础知识',
+      '【通风】区间冷媒水管爆管',
+      '【通风】消防系统联动中环控模式无法自动执行',
+      '【低压】400V低压开关柜',
+      '【低压】智能照明模块',
+      '【低压】400V单段失电母联未备自投',
+      '【低压】照明大面积失电',
+      '【AFC】基本知识',
+      '【AFC】全站闸机紧急释放'
+    ]);
+    const isExisted: Set<string> = new Set();
     this.props.outerData.forEach(item => {
-      if (true /* item.XX */) {
-        const month = new Date(item[scmap.month]).getMonth() + 1;
+      if (filterSet.has(item.K) && !!item.J && (!condition || item.H === condition)) {
+        const month = new Date(item.J).getMonth() + 1;
+        const hash: string = (item.K + month).toString();
         
-        if (mapD.has(month)) {
-          const old = mapD.get(month);
-          if (old) {
-            //
+        if (!isExisted.has(hash)) {
+          isExisted.add(hash);
+
+          if (mapD.has(month)) {
+            const old = mapD.get(month);
+            if (old) {
+              old.projectCount += 1;
+              old.assessCount += !!item.O ? 1 : 0;
+              old.passedCount += item.O === '通过' ? 1 : 0;
+              old.failedCount += item.O === '不通过' ? 1 : 0;
+              old.theoryCount += (item.M === '理论' && !!item.O) ? 1 : 0;
+              old.trainCount += (item.M === '实操' && !!item.O) ? 1 : 0;
+              old.remarks?.add(item.K);
+            }
+          } else {
+            mapD.set(month, {
+              unitName: condition ? condition : item.G,
+              projectCount: 1,
+              assessCount: !!item.O ? 1 : 0,
+              passedCount: item.O === '通过' ? 1 : 0,
+              failedCount: item.O === '不通过' ? 1 : 0,
+              theoryCount: (item.M === '理论' && !!item.O) ? 1 : 0,
+              trainCount: (item.M === '实操' && !!item.O) ? 1 : 0,
+              remarks: new Set([item.K]),
+              isCondition: !!condition,
+            });
           }
         } else {
-          // mapD.set(month, {});
+          if (mapD.has(month)) {
+            const old = mapD.get(month);
+            if (old) {
+              old.assessCount += !!item.O ? 1 : 0;
+              old.passedCount += item.O === '通过' ? 1 : 0;
+              old.failedCount += item.O === '不通过' ? 1 : 0;
+              old.theoryCount += (item.M === '理论' && !!item.O) ? 1 : 0;
+              old.trainCount += (item.M === '实操' && !!item.O) ? 1 : 0;
+              old.remarks?.add(item.K);
+            }
+          }
         }
       }
     });
+
+    const dataD: TableDataRowD[] = [];
+    for (let [key, params] of mapD.entries()) {
+      const remarksTextArr: string[] = [];
+      if (params.remarks) {
+        for (let val of params.remarks.values()) {
+          remarksTextArr.push(val.replace(/【.*】/, ''));
+        }
+      }
+      dataD.push({
+        id: (this.idCount++).toString(),
+        ...params,
+        month: +key,
+        monthName: key + '月',
+        passedRate: params.assessCount ? params.passedCount / params.assessCount : undefined,
+        remarksText: remarksTextArr.join('、'),
+      });
+    }
+
+    dataD.sort((a, b) => a.month - b.month);
+    !condition && this.setState({ tableDataD: dataD });
+    return dataD;
   }
 
   // 计算表格，培训表
   handleCalcPatr1 = () => {
-    this.calcDataA();
-    this.calcDataB();
-    this.calcDataC();
+    // this.calcDataA();
+    // this.calcDataB();
+    // this.calcDataC();
+
+    const set: Set<string> = new Set();
+    this.props.outerData.forEach(item => set.add(item[this.state.filters.table1]));
+    const options = [];
+    for (let val of set.values()) {
+      options.push({
+        label: val,
+        value: val,
+      });
+    }
+
+    const tableDataA: TableDataRowA[] = [];
+    const tableDataB: TableDataRowB[] = [];
+    const tableDataC: TableDataRowC[] = [];
+    [{ value: undefined }, ...options].forEach(({ value }) => {
+      const dataA = this.calcDataA(value);
+      const dataB = this.calcDataB(value);
+      const dataC = this.calcDataC(value);
+
+      tableDataA.push(...dataA);
+      tableDataB.push(...dataB);
+      tableDataC.push(...dataC);
+
+    });
+    this.setState({
+      tableDataA: [...tableDataA],
+      tableDataB: [...tableDataB],
+      tableDataC: [...tableDataC],
+    });
   }
 
   // 必知必会表
   handleCalcPatr2 = () => {
-    this.calcDataD();
+    // this.calcDataD();
+
+    const set: Set<string> = new Set();
+    this.props.outerData.forEach(item => set.add(item[this.state.filters.table2]));
+    const options = [];
+    for (let val of set.values()) {
+      options.push({
+        label: val,
+        value: val,
+      });
+    }
+
+    const tableDataD: TableDataRowD[] = [];
+    [{ value: undefined }, ...options].forEach(({ value }) => {
+      const dataD = this.calcDataD(value);
+
+      tableDataD.push(...dataD);
+
+    });
+    this.setState({
+      tableDataD: [...tableDataD],
+    });
   }
 
   // 导出
-  handleExportPart1 = () => {
-    const wb = XLSX.utils.book_new();
+  handleExportPart1 = (workbook?: WorkBook) => {
+    const wb = workbook ?? XLSX.utils.book_new();
     const sheetA = this.getExportSheet(this.state.tableColumnsA, this.state.tableDataA);
     XLSX.utils.book_append_sheet(wb, sheetA, '核心技能情况表');
 
@@ -332,14 +500,25 @@ class Result extends React.Component<IProps, IState> {
     const sheetC = this.getExportSheet(this.state.tableColumnsC, this.state.tableDataC);
     XLSX.utils.book_append_sheet(wb, sheetC, '培训师情况表');
 
-    XLSX.writeFile(wb, 'output.xlsx');
+    !workbook && XLSX.writeFile(wb, '培训情况分析结果.xlsx');
   }
 
   // 导出
-  handleExportPart2() { }
+  handleExportPart2(workbook?: WorkBook) {
+    const wb = workbook ?? XLSX.utils.book_new();
+    const sheetD = this.getExportSheet(this.state.tableColumnsD, this.state.tableDataD);
+    XLSX.utils.book_append_sheet(wb, sheetD, '必知必会评估表');
+
+    !workbook && XLSX.writeFile(wb, '必知必会分析结果.xlsx');
+  }
   
   // 合并导出
-  handleExportAll() {}
+  handleExportAll() {
+    const wb = XLSX.utils.book_new();
+    this.handleExportPart1(wb);
+    this.handleExportPart2(wb);
+    XLSX.writeFile(wb, '培训情况、必知必会分析结果.xlsx');
+  }
   
   // 根据 columns 过滤生成导出的 excel 表格列
   getExportSheet(columns: TableColumns, data: TableDataRow[]): Sheet {
@@ -368,11 +547,6 @@ class Result extends React.Component<IProps, IState> {
   }
 
   render() {
-    const selectOptions = this.props.outerColumns.map(item => ({
-      label: (item.title ?? '').toString(),
-      value: (item.key ?? '').toString(),
-      key: (item.key ?? '').toString(),
-    }));
     return (
       <div className="workbench-result">
         <div className="workbench-result-toolbar">
@@ -390,24 +564,34 @@ class Result extends React.Component<IProps, IState> {
             <Button size="small" onClick={ () => this.handleExportAll() }>整合导出</Button>
           </div>
 
-          {
-            /* <div className="workbench-result-config">
-              {
-                toolbarConfigItems.map((item) => (
-                  <Select
-                    className="workbench-result-config-item"
-                    key={item.key}
-                    data-label={item.key}
-                    size="small"
-                    placeholder={`选择${item.label}`}
-                    options={selectOptions}
-                    value={this.state.selectedColumnsMap[item.key]}
-                  >
-                  </Select>
-                ))
-              }
-            </div> */
-          }
+          <div className="workbench-result-config">
+            {
+              // <Select
+              //   className="workbench-result-config-item"
+              //   size="small"
+              //   placeholder="筛选条件"
+              //   options={this.state.filtersOptions}
+              //   value={this.state.currentFilterKeyword}
+              //   onChange={(ev) => this.setState({ currentFilterKeyword: ev })}
+              //   allowClear
+              // >
+              // </Select>
+            }
+            {
+              // toolbarConfigItems.map((item) => (
+              //   <Select
+              //     className="workbench-result-config-item"
+              //     key={item.key}
+              //     data-label={item.key}
+              //     size="small"
+              //     placeholder={`选择${item.label}`}
+              //     options={selectOptions}
+              //     value={this.state.selectedColumnsMap[item.key]}
+              //   >
+              //   </Select>
+              // ))
+            }
+          </div>
         </div>
         <div className="workbench-result-tables">
           <Tabs defaultActiveKey="1" tabBarStyle={{ padding: '0 10px' }} style={{ height: '100%' }}>
@@ -422,6 +606,16 @@ class Result extends React.Component<IProps, IState> {
                 pagination={false}
                 scroll={{ x: 'max-content' }}
               ></Table>
+              <List size="small">
+                {
+                  this.state.tableDataA.filter(item => !item.isCondition).map(item => (
+                    <List.Item
+                      key={item.id}
+                      style={{ padding: '5px 10px' }}
+                    >{`${item.monthName}设备维保必知必会培训计划完成${item.trainPersonCount}人次，实际完成${item.trainPersonCount}人次，主要完成${item.remarksText}等${item.trainProjectCount}个技能项点的培训。`}</List.Item>
+                  ))
+                }
+              </List>
             </Tabs.TabPane>
             <Tabs.TabPane key="2" tab="培训-情况表">
               <Table
@@ -457,6 +651,17 @@ class Result extends React.Component<IProps, IState> {
                 pagination={false}
                 scroll={{ x: 'max-content' }}
               ></Table>
+
+              <List size="small">
+                {
+                  this.state.tableDataD.filter(item => !item.isCondition).map(item => (
+                    <List.Item
+                      key={item.id}
+                      style={{ padding: '5px 10px' }}
+                    >{`${item.monthName}完成设备维保必知必会验收评定${item.assessCount}人，实际通过${item.passedCount}人，通过率为${((item.passedRate ?? 0) * 100).toFixed(2)}%，其中理论验收${item.theoryCount}人，实操验收${item.trainCount}人，验收主要技能项点为：${item.remarksText}。`}</List.Item>
+                  ))
+                }
+              </List>
             </Tabs.TabPane>
           </Tabs>
         </div>

@@ -1,17 +1,23 @@
 import { TableDataRow } from './index';
 
-export interface TableDataRowBasisA {
+interface Common {
+  unitName: string;
+  remarks?: Set<string>;
+  remarksText?: string;
+  isCondition?: boolean;
+}
+export interface TableDataRowBasisA extends Common {
   trainProjectCount: number;
   trainPersonCount: number;
   theoryHours: number;
   practiceHours: number;
-  unitName: string;
+  remarks?: Set<string>;
+  remarksText?: string;
 };
 export interface TableDataRowA extends TableDataRowBasisA, TableDataRow { };
 
-export interface TableDataRowBasisB {
+export interface TableDataRowBasisB extends Common {
   type: 'M' | 'P';
-  unitName: string;
   station: string;
   month: number;
   nowPersonCount?: number;
@@ -24,8 +30,7 @@ export interface TableDataRowBasisB {
 };
 export interface TableDataRowB extends TableDataRowBasisB, TableDataRow { }
 
-export interface TableDataRowBasisC {
-  unitName: string;
+export interface TableDataRowBasisC extends Common {
   personCount?: number;
   personCourseCount: number;
   rate?: number;
@@ -34,13 +39,15 @@ export interface TableDataRowBasisC {
 }
 export interface TableDataRowC extends TableDataRowBasisC, TableDataRow { }
 
-export interface TableDataRowBasisD {
-  unitName: string;
+export interface TableDataRowBasisD extends Common {
   projectCount: number;
   assessCount: number;
   passedCount: number;
   failedCount: number;
   theoryCount: number;
   trainCount: number;
+  passedRate?: number;
+  remarks?: Set<string>;
+  remarksText?: string;
 }
 export interface TableDataRowD extends TableDataRowBasisD, TableDataRow { }

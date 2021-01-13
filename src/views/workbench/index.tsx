@@ -101,12 +101,18 @@ class Workbench extends React.Component<IProps, IState> {
 
     // 加载完成
     fileReader.onload = ev => {
-      this.workbook = XLSX.read(fileReader.result, { type: 'array', cellDates: true });
+      this.workbook = XLSX.read(fileReader.result, {
+        type: 'array',
+        // cellDates: true
+      });
       this.setState({
         sheetNames: [...this.workbook.SheetNames],
         currentSheet: this.workbook.SheetNames.length ? this.workbook.SheetNames[0] : '',
       });
       console.log(this.workbook);
+
+      // @ts-ignore
+      window.workbook = this.workbook;
     };
     
     fileReader.readAsArrayBuffer(file); // 读取文件
@@ -251,7 +257,7 @@ class Workbench extends React.Component<IProps, IState> {
       });
     }
 
-    this.test();
+    // this.test();
   }
 
   componentDidUpdate(prevProps: IProps, prevState: IState) {
@@ -286,7 +292,7 @@ class Workbench extends React.Component<IProps, IState> {
                 <Button size="small" icon={<UploadOutlined />}>选择本地文件</Button>
               </Upload>
 
-              <Button size="small" onClick={() => this.test('/test/test-file2.xlsx')}>加载必知必会表</Button>
+              {/* <Button size="small" onClick={() => this.test('/test/test-file2.xlsx')}>加载必知必会表</Button> */}
             </div>
             <div className="workbench-operation-right">
               <div className="sheets" ref={this.sheetsWrapper}>
