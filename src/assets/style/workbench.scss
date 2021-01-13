@@ -158,7 +158,7 @@ $border-base: 1px solid rgb(240, 242, 245);
       margin-right: 50px;
       flex-shrink: 0;
 
-      >button:not(:last-of-type) {
+      >*:not(:last-child) {
         margin-right: 10px;
       }
     }

@@ -1,41 +1,18 @@
 import React from 'react';
-import { TableColumnsMap, TableColumns, TableDataRow } from './index';
-import { Table, Button, Select } from 'antd';
-import { columnsA, getColumnsB, getColumnsC } from './result-columns';
+import { TableColumns, TableDataRow } from './index';
+import { Table, Button, Select, Tabs } from 'antd';
+import { columnsA, getColumnsB, getColumnsC, columnsD } from './result-columns';
 import XLSX, { Sheet, ColInfo } from 'xlsx';
-
-interface TableDataRowBasisA {
-  trainProjectCount: number;
-  trainPersonCount: number;
-  theoryHours: number;
-  practiceHours: number;
-  unitName: string;
-};
-interface TableDataRowA extends TableDataRowBasisA, TableDataRow { };
-interface TableDataRowBasisB {
-  type: 'M' | 'P';
-  unitName: string;
-  station: string;
-  month: number;
-  nowPersonCount?: number;
-  trainHours: number;
-  trainCount: number;
-  trainPersonCount: number;
-  averTrainHours?: number;
-  yearAverHours?: number;
-  completeRate?: number;
-};
-interface TableDataRowB extends TableDataRowBasisB, TableDataRow { }
-
-interface TableDataRowBasisC {
-  unitName: string;
-  personCount?: number;
-  personCourseCount: number;
-  rate?: number;
-  totalHours: number;
-  averHours?: number;
-}
-interface TableDataRowC extends TableDataRowBasisC, TableDataRow { }
+import {
+  TableDataRowA,
+  TableDataRowB,
+  TableDataRowC,
+  TableDataRowD,
+  TableDataRowBasisA,
+  TableDataRowBasisB,
+  TableDataRowBasisC,
+  TableDataRowBasisD,
+} from './result-table-types';
 
 
 type ToolbarConfigItemKeyType = 'month' | 'project' | 'role' |
@@ -69,6 +46,8 @@ interface IState {
   tableColumnsB: TableColumns;
   tableDataC: TableDataRowC[];
   tableColumnsC: TableColumns;
+  tableDataD: TableDataRowD[];
+  tableColumnsD: TableColumns;
   selectedColumnsMap: {
     month: string;
     project: string;
@@ -93,6 +72,8 @@ class Result extends React.Component<IProps, IState> {
       tableColumnsB: getColumnsB(this),
       tableDataC: [],
       tableColumnsC: getColumnsC(this),
+      tableDataD: [],
+      tableColumnsD: columnsD,
       selectedColumnsMap: {
         month: 'B',
         project: 'H',
@@ -305,15 +286,42 @@ class Result extends React.Component<IProps, IState> {
     this.setState({ tableDataC: dataC });
   }
 
-  // 计算表格
-  handleCalc = () => {
+  // 计算表格 D
+  calcDataD() {
+    let idCount: number = Date.now();
+    const scmap = this.state.selectedColumnsMap;
+
+    const mapD: Map<number, TableDataRowBasisD> = new Map();
+    this.props.outerData.forEach(item => {
+      if (true /* item.XX */) {
+        const month = new Date(item[scmap.month]).getMonth() + 1;
+        
+        if (mapD.has(month)) {
+          const old = mapD.get(month);
+          if (old) {
+            //
+          }
+        } else {
+          // mapD.set(month, {});
+        }
+      }
+    });
+  }
+
+  // 计算表格，培训表
+  handleCalcPatr1 = () => {
     this.calcDataA();
     this.calcDataB();
     this.calcDataC();
   }
 
+  // 必知必会表
+  handleCalcPatr2 = () => {
+    this.calcDataD();
+  }
+
   // 导出
-  handleExport = () => {
+  handleExportPart1 = () => {
     const wb = XLSX.utils.book_new();
     const sheetA = this.getExportSheet(this.state.tableColumnsA, this.state.tableDataA);
     XLSX.utils.book_append_sheet(wb, sheetA, '核心技能情况表');
@@ -327,6 +335,12 @@ class Result extends React.Component<IProps, IState> {
     XLSX.writeFile(wb, 'output.xlsx');
   }
 
+  // 导出
+  handleExportPart2() { }
+  
+  // 合并导出
+  handleExportAll() {}
+  
   // 根据 columns 过滤生成导出的 excel 表格列
   getExportSheet(columns: TableColumns, data: TableDataRow[]): Sheet {
     const map: Map<string, string> = new Map();
@@ -363,9 +377,17 @@ class Result extends React.Component<IProps, IState> {
       <div className="workbench-result">
         <div className="workbench-result-toolbar">
           <div className="workbench-result-btns">
-            <Button type="primary" size="small" onClick={() => this.handleCalc()}>分析月度培训明细表</Button>
-            <Button type="primary" size="small" onClick={() => null}>分析必知必会评估明细表</Button>
-            <Button size="small" onClick={ () => this.handleExport() }>导出</Button>
+            <Button.Group>
+              <Button type="primary" size="small" onClick={() => this.handleCalcPatr1()}>分析月度培训明细表</Button>
+              <Button size="small" onClick={ () => this.handleExportPart1() }>导出</Button>
+            </Button.Group>
+
+            <Button.Group>
+              <Button type="primary" size="small" onClick={() => this.handleCalcPatr2()}>分析必知必会评估明细表</Button>
+              <Button size="small" onClick={ () => this.handleExportPart2() }>导出</Button>
+            </Button.Group>
+
+            <Button size="small" onClick={ () => this.handleExportAll() }>整合导出</Button>
           </div>
 
           {
@@ -388,33 +410,55 @@ class Result extends React.Component<IProps, IState> {
           }
         </div>
         <div className="workbench-result-tables">
-          <Table
-            columns={this.state.tableColumnsA}
-            dataSource={this.state.tableDataA}
-            size="small"
-            bordered
-            rowKey="id"
-            pagination={false}
-            scroll={{ x: 'max-content' }}
-          ></Table>
-          <Table
-            columns={this.state.tableColumnsB}
-            dataSource={this.state.tableDataB}
-            size="small"
-            bordered
-            rowKey="id"
-            pagination={false}
-            scroll={{ x: 'max-content' }}
-          ></Table>
-          <Table
-            columns={this.state.tableColumnsC}
-            dataSource={this.state.tableDataC}
-            size="small"
-            bordered
-            rowKey="id"
-            pagination={false}
-            scroll={{ x: 'max-content' }}
-          ></Table>
+          <Tabs defaultActiveKey="1" tabBarStyle={{ padding: '0 10px' }} style={{ height: '100%' }}>
+            {/* 培训表 */}
+            <Tabs.TabPane key="1" tab="培训-技能表">
+              <Table
+                columns={this.state.tableColumnsA}
+                dataSource={this.state.tableDataA}
+                size="small"
+                bordered
+                rowKey="id"
+                pagination={false}
+                scroll={{ x: 'max-content' }}
+              ></Table>
+            </Tabs.TabPane>
+            <Tabs.TabPane key="2" tab="培训-情况表">
+              <Table
+                columns={this.state.tableColumnsB}
+                dataSource={this.state.tableDataB}
+                size="small"
+                bordered
+                rowKey="id"
+                pagination={false}
+                scroll={{ x: 'max-content' }}
+              ></Table>
+            </Tabs.TabPane>
+            <Tabs.TabPane key="3" tab="培训-讲师表">
+              <Table
+                columns={this.state.tableColumnsC}
+                dataSource={this.state.tableDataC}
+                size="small"
+                bordered
+                rowKey="id"
+                pagination={false}
+                scroll={{ x: 'max-content' }}
+              ></Table>
+            </Tabs.TabPane>
+
+            {/* 必知必会表 */}
+            <Tabs.TabPane key="4" tab="知会-评估表">
+              <Table
+                columns={this.state.tableColumnsD}
+                dataSource={this.state.tableDataD}
+                size="small"
+                bordered
+                rowKey="id"
+                pagination={false}
+                scroll={{ x: 'max-content' }}
+              ></Table>
+            </Tabs.TabPane>
+          </Tabs>
         </div>
       </div>
     );

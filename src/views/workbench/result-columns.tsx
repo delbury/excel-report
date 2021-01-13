@@ -1,4 +1,3 @@
-import { spawn } from 'child_process';
 import { TableColumns } from './index';
 import { Input } from 'antd';
 import Result from './result';
@@ -260,3 +259,71 @@ export function getColumnsC(that: Result): TableColumns {
     },
   ];
 };
+
+export const columnsD: TableColumns = [
+  {
+    title: '单位',
+    key: 'unitName',
+    dataIndex: 'unitName',
+    ellipsis: true,
+    width: 120,
+    fixed: 'left',
+  },
+  {
+    title: '月份',
+    key: 'monthName',
+    dataIndex: 'monthName',
+    ellipsis: true,
+    width: 80,
+    fixed: 'left',
+  },
+  {
+    title: '评估项目数',
+    key: 'projectCount',
+    dataIndex: 'projectCount',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '评估人次',
+    key: 'assessCount',
+    dataIndex: 'assessCount',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '合格率',
+    key: 'passedRate',
+    dataIndex: 'passedRate',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '通过人次',
+    key: 'passedCount',
+    dataIndex: 'passedCount',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '未通过人次',
+    key: 'failedCount',
+    dataIndex: 'failedCount',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '理论验收人次',
+    key: 'theoryCount',
+    dataIndex: 'theoryCount',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '实操验收人次',
+    key: 'trainCount',
+    dataIndex: 'trainCount',
+    ellipsis: true,
+    width: 100,
+  },
+];

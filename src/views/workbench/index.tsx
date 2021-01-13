@@ -154,7 +154,7 @@ class Workbench extends React.Component<IProps, IState> {
     if (sheetName in this.tableColumnsCaches) {
       this.setState({
         tableColumns: this.tableColumnsCaches[sheetName],
-        tableData: this.tableDataCaches[sheetName],
+        tableData: this.tableDataCaches[sheetName].slice(0, 20), // 取前 20 条
       });
       return;
     }
@@ -236,7 +236,7 @@ class Workbench extends React.Component<IProps, IState> {
     this.tableColumnsMapCaches[sheetName] = headerMap; // 缓存hash
     this.setState({
       tableColumns: header,
-      tableData: body,
+      tableData: body.slice(0, 20), // 取前 20 条
     });
   }
 
@@ -263,8 +263,8 @@ class Workbench extends React.Component<IProps, IState> {
   }
 
   // 测试
-  test() {
-    fetchTestFile().then(blob => {
+  test(url?: string) {
+    fetchTestFile(url).then(blob => {
       this.loadFile(blob);
     }).catch(err => console.log(err)); // 获取测试文件
   }
@@ -283,12 +283,14 @@ class Workbench extends React.Component<IProps, IState> {
                 beforeUpload={this.handleBeforeUpload}
                 onChange={this.uploadOnChange}
               >
-                <Button icon={<UploadOutlined />}>选择本地文件</Button>
+                <Button size="small" icon={<UploadOutlined />}>选择本地文件</Button>
               </Upload>
+
+              <Button size="small" onClick={() => this.test('/test/test-file2.xlsx')}>加载必知必会表</Button>
             </div>
             <div className="workbench-operation-right">
               <div className="sheets" ref={this.sheetsWrapper}>
-                <Radio.Group value={this.state.currentSheet} onChange={this.handleSheetChange}>
+                <Radio.Group size="small" value={this.state.currentSheet} onChange={this.handleSheetChange}>
                   {
                     this.state.sheetNames.map((name, index) => <Radio.Button value={name} key={name.toString() + index}>{ name }</Radio.Button>)
                   }
@@ -302,7 +304,7 @@ class Workbench extends React.Component<IProps, IState> {
               dataSource={this.state.tableData}
               size="small"
               bordered
-              scroll={{ x: 'max-content', y: 100 }}
+              scroll={{ x: 'max-content', y: 150 }}
               rowKey="id"
               pagination={false}
               sticky={true}
