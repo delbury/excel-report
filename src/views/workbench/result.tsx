@@ -442,6 +442,7 @@ class Result extends React.Component<IProps, IState> {
       });
     }
 
+
     const tableDataA: TableDataRowA[] = [];
     const tableDataB: TableDataRowB[] = [];
     const tableDataC: TableDataRowC[] = [];

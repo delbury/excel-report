@@ -39,6 +39,7 @@ interface IState {
   currentSheet: string;
   tableData: TableData;
   tableColumns: TableColumns;
+  allTableData: TableData;
 }
 
 const uploadConfig: UploadProps = {
@@ -61,6 +62,7 @@ class Workbench extends React.Component<IProps, IState> {
       currentSheet: '',
       tableData: [],
       tableColumns: [],
+      allTableData: [],
     };
   }
 
@@ -161,6 +163,7 @@ class Workbench extends React.Component<IProps, IState> {
       this.setState({
         tableColumns: this.tableColumnsCaches[sheetName],
         tableData: this.tableDataCaches[sheetName].slice(0, 20), // 取前 20 条
+        allTableData: this.tableDataCaches[sheetName],
       });
       return;
     }
@@ -243,6 +246,7 @@ class Workbench extends React.Component<IProps, IState> {
     this.setState({
       tableColumns: header,
       tableData: body.slice(0, 20), // 取前 20 条
+      allTableData: body,
     });
   }
 
@@ -317,7 +321,7 @@ class Workbench extends React.Component<IProps, IState> {
             />
         
             {/* <Analysis columns={this.state.tableColumns} columnsMap={headerMap} data={ this.state.tableData } /> */}
-            <Result outerColumns={ this.state.tableColumns } outerData={ this.state.tableData }></Result>
+            <Result outerColumns={ this.state.tableColumns } outerData={ this.state.allTableData }></Result>
           </div>
           
         </Content>

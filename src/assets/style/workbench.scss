@@ -162,6 +162,10 @@ $border-base: 1px solid rgb(240, 242, 245);
         margin-right: 10px;
       }
     }
+
+    .ant-tabs-content-holder {
+      overflow: auto;
+    }
   }
 }
 
