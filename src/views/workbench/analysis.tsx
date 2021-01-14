@@ -357,7 +357,7 @@ class Analysis extends React.Component<IProps, IState> {
             autoSize={false}
             style={{ resize: 'none', flex: 1 }}
             value={ this.state.resultOutput }
-            ></Input.TextArea>
+          ></Input.TextArea>
           {/* {
             this.state.fields.map((field, index) => {
               if (field.type === FieldTypes.Text) {

@@ -107,6 +107,7 @@
     ]
   },
   "devDependencies": {
+    "babel-plugin-import": "^1.13.3",
     "node-sass": "^4.14.1"
   },
   "jest": {
@@ -163,8 +164,35 @@
   },
   "babel": {
     "presets": [
-      "react-app"
+      [
+        "react-app",
+        {
+          "typescript": true,
+          "useESModules": true
+        }
+      ]
+    ],
+    "plugins": [
+      [
+        "import",
+        {
+          "libraryName": "antd",
+          "libraryDirectory": "es",
+          "style": "css"
+        },
+        "one"
+      ],
+      [
+        "import",
+        {
+          "libraryName": "@ant-design/icons",
+          "libraryDirectory": "es/icons",
+          "camel2DashComponentName": false
+        },
+        "two"
+      ]
     ]
   },
-  "homepage": "./"
+  "homepage": "./",
+  "sideEffects": false
 }

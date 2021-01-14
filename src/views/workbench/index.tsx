@@ -292,7 +292,10 @@ class Workbench extends React.Component<IProps, IState> {
                 beforeUpload={this.handleBeforeUpload}
                 onChange={this.uploadOnChange}
               >
-                <Button size="small" icon={<UploadOutlined />}>选择本地文件</Button>
+                <Button
+                  size="small"
+                  icon={<UploadOutlined />}
+                >选择本地文件</Button>
               </Upload>
 
               {/* <Button size="small" onClick={() => this.test('/test/test-file2.xlsx')}>加载必知必会表</Button> */}
