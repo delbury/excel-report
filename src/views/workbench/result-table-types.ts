@@ -51,3 +51,5 @@ export interface TableDataRowBasisD extends Common {
   remarksText?: string;
 }
 export interface TableDataRowD extends TableDataRowBasisD, TableDataRow { }
+
+export type TableDataRowKinds = TableDataRowA | TableDataRowB | TableDataRowC | TableDataRowD

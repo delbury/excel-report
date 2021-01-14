@@ -1,8 +1,9 @@
 import { TableColumns } from './index';
 import { Input } from 'antd';
 import Result from './result';
+import { TableDataRowA, TableDataRowB, TableDataRowC, TableDataRowD } from './result-table-types';
 
-export const columnsA: TableColumns = [
+export const columnsA: TableColumns<TableDataRowA> = [
   {
     title: '单位',
     key: 'unitName',
@@ -69,7 +70,13 @@ export const columnsA: TableColumns = [
 
 // export const columnsB: TableColumns = [];
 
-export function getColumnsB(that: Result): TableColumns {
+/**
+ * 现员人数：手动输入
+ * 人均培训课时：培训课时 / 现员人数
+ * 年度累计人均课时：上一个月年度累计人均课时 + 本月人均培训课时
+ * 年度培训课时完成率：全年年度累计人均课时 / 系数(42 | 60)
+ */
+export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
   return [
     {
       title: '单位',
@@ -115,27 +122,22 @@ export function getColumnsB(that: Result): TableColumns {
               rows[index].nowPersonCount = value;
               rows[index].averTrainHours = value ? rows[index].trainHours / value : undefined;
 
-              let lastM = -1;
-              let lastP = -1;
-              rows.forEach((row, index) => {
-                if (row.type === 'M') {
-                  if (lastM < 0) {
-                    rows[index].yearAverHours = rows[index].averTrainHours ?? 0;
-                  } else {
-                    rows[index].yearAverHours = (rows[index].averTrainHours ?? 0) + (rows[lastM].averTrainHours ?? 0);
-                  }
-                  rows[index].completeRate = (rows[index].yearAverHours ?? 0) / 42;
-                  lastM = index;
-                } else if (row.type === 'P') {
-                  if (lastP < 0) {
-                    rows[index].yearAverHours = rows[index].averTrainHours ?? 0;
-                  } else {
-                    rows[index].yearAverHours = (rows[index].averTrainHours ?? 0) + (rows[lastP].averTrainHours ?? 0);
-                  }
-                  rows[index].completeRate = (rows[index].yearAverHours ?? 0) / 60;
-                  lastP = index;
+              const sameTableRows = rows.filter(row => row.type === rows[index].type && row.unitName === rows[index].unitName);
+              const k: number = rows[index].type === 'M' ? 42 : rows[index].type === 'P' ? 60 : 1; // 年度培训课时完成率系数
+              // 计算年度累计人均课时
+              sameTableRows.forEach((row, ind) => {
+                if (ind === 0) {
+                  row.yearAverHours = row.averTrainHours ?? 0;
+                } else {
+                  row.yearAverHours = (row.averTrainHours ?? 0) + (rows[ind - 1].yearAverHours ?? 0);
                 }
+                row.completeRate = (row.yearAverHours ?? 0) / k;
               });
+              // 计算年度培训课时完成率
+              // sameTableRows.forEach((row, ind) => {
+              //   row.completeRate = (row.yearAverHours ?? 0) / 42;
+              // });
+
               that.setState({ tableDataB: rows });
             }}></Input>);
       }
@@ -185,7 +187,7 @@ export function getColumnsB(that: Result): TableColumns {
   ];
 }
 
-export function getColumnsC(that: Result): TableColumns {
+export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
   return [
     {
       title: '单位',
@@ -216,6 +218,7 @@ export function getColumnsC(that: Result): TableColumns {
             size="small"
             min={0}
             step={1}
+            value={record.personCount}
             onChange={(ev) => {
               const value: number = +ev.target.value;
               const rows = [...that.state.tableDataC];
@@ -260,7 +263,7 @@ export function getColumnsC(that: Result): TableColumns {
   ];
 };
 
-export const columnsD: TableColumns = [
+export const columnsD: TableColumns<TableDataRowD> = [
   {
     title: '单位',
     key: 'unitName',

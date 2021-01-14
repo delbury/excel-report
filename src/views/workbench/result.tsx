@@ -12,6 +12,7 @@ import {
   TableDataRowBasisB,
   TableDataRowBasisC,
   TableDataRowBasisD,
+  TableDataRowKinds,
 } from './result-table-types';
 
 
@@ -41,13 +42,13 @@ interface IProps {
 }
 interface IState {
   tableDataA: TableDataRowA[];
-  tableColumnsA: TableColumns;
+  tableColumnsA: TableColumns<TableDataRowA>;
   tableDataB: TableDataRowB[];
-  tableColumnsB: TableColumns;
+  tableColumnsB: TableColumns<TableDataRowB>;
   tableDataC: TableDataRowC[];
-  tableColumnsC: TableColumns;
+  tableColumnsC: TableColumns<TableDataRowC>;
   tableDataD: TableDataRowD[];
-  tableColumnsD: TableColumns;
+  tableColumnsD: TableColumns<TableDataRowD>;
   selectedColumnsMap: {
     month: string;
     project: string;
@@ -310,6 +311,8 @@ class Result extends React.Component<IProps, IState> {
         month: +key,
         averHours: params.totalHours / params.personCourseCount,
         monthName: key + '月',
+        personCount: 7,
+        rate: params.personCourseCount / 7,
       });
     }
 
@@ -522,7 +525,7 @@ class Result extends React.Component<IProps, IState> {
   }
   
   // 根据 columns 过滤生成导出的 excel 表格列
-  getExportSheet(columns: TableColumns, data: TableDataRow[]): Sheet {
+  getExportSheet(columns: TableColumns<any>, data: TableDataRow[]): Sheet {
     const map: Map<string, string> = new Map();
     const res: any = [];
     const colInfos: ColInfo[] = [];

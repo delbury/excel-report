@@ -25,8 +25,8 @@ export interface TableDataRow {
 //   editable?: boolean;
 // }
 export type TableData = TableDataRow[];
-export type TableColumn = ColumnType<object>;
-export type TableColumns = ColumnsType<object>;
+export type TableColumn<T = object> = ColumnType<T>;
+export type TableColumns<T = object> = ColumnsType<T>;
 export type TableColumnsMap = Map<string, TableColumn>;
 
 interface IProps extends RouteComponentProps {
@@ -111,7 +111,6 @@ class Workbench extends React.Component<IProps, IState> {
         sheetNames: [...this.workbook.SheetNames],
         currentSheet: this.workbook.SheetNames.length ? this.workbook.SheetNames[0] : '',
       });
-      console.log(this.workbook);
 
       // @ts-ignore
       window.workbook = this.workbook;
