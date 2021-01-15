@@ -11,7 +11,7 @@ import { actions } from '@/redux/actions/global';
 import { StoreState } from '@/redux';
 import XLSX, { WorkBook } from 'xlsx';
 import BScroll, { BScrollInstance } from 'better-scroll';
-import Analysis from './analysis';
+// import Analysis from './analysis';
 import Result from './result';
 import { fetchTestFile } from '@/lib/util';
 
@@ -260,7 +260,7 @@ class Workbench extends React.Component<IProps, IState> {
       });
     }
 
-    // this.test();
+    this.test();
   }
 
   componentDidUpdate(prevProps: IProps, prevState: IState) {

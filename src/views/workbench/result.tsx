@@ -14,6 +14,7 @@ import {
   TableDataRowBasisD,
   TableDataRowKinds,
 } from './result-table-types';
+import ResultCharts from './chart';
 
 
 type ToolbarConfigItemKeyType = 'month' | 'project' | 'role' |
@@ -610,6 +611,7 @@ class Result extends React.Component<IProps, IState> {
                 pagination={false}
                 scroll={{ x: 'max-content' }}
               ></Table>
+              <ResultCharts columns={ this.state.tableColumnsA } data={ this.state.tableDataA }></ResultCharts>
               <List size="small">
                 {
                   this.state.tableDataA.filter(item => !item.isCondition).map(item => (
