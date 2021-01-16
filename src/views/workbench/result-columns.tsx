@@ -233,7 +233,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
       }
     },
     {
-      title: '培训师人授课数',
+      title: '培训师授课人数',
       key: 'personCourseCount',
       dataIndex: 'personCourseCount',
       ellipsis: true,

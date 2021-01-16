@@ -611,7 +611,18 @@ class Result extends React.Component<IProps, IState> {
                 pagination={false}
                 scroll={{ x: 'max-content' }}
               ></Table>
-              <ResultCharts columns={ this.state.tableColumnsA } data={ this.state.tableDataA }></ResultCharts>
+              <ResultCharts
+                columns={this.state.tableColumnsA}
+                data={this.state.tableDataA.filter(item => !item.isCondition)}
+                title="技能表"
+                dimensions={[
+                  { key: 'monthName', label: 'monthName' },
+                  { key: 'trainProjectCount', label: '培训项目数' },
+                  { key: 'trainPersonCount', label: '培训总人次' },
+                  { key: 'theoryHours', label: '理论培训课时' },
+                  { key: 'practiceHours', label: '实操培训课时' },
+                ]}
+              ></ResultCharts>
               <List size="small">
                 {
                   this.state.tableDataA.filter(item => !item.isCondition).map(item => (
@@ -623,6 +634,7 @@ class Result extends React.Component<IProps, IState> {
                 }
               </List>
             </Tabs.TabPane>
+
             <Tabs.TabPane key="2" tab="培训-情况表">
               <Table
                 columns={this.state.tableColumnsB}
@@ -633,7 +645,30 @@ class Result extends React.Component<IProps, IState> {
                 pagination={false}
                 scroll={{ x: 'max-content' }}
               ></Table>
+              <div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto' }}>
+                <ResultCharts
+                  columns={this.state.tableColumnsB}
+                  data={this.state.tableDataB.filter(item => !item.isCondition && item.type === 'M')}
+                  title="管理人员情况表"
+                  dimensions={[
+                    { key: 'monthName', label: 'monthName' },
+                    { key: 'completeRate', label: '年度培训课时完成率' },
+                  ]}
+                  markLine={1}
+                  ></ResultCharts>
+                <ResultCharts
+                  columns={this.state.tableColumnsB}
+                  data={this.state.tableDataB.filter(item => !item.isCondition && item.type === 'P')}
+                  title="生产人员情况表"
+                  dimensions={[
+                    { key: 'monthName', label: 'monthName' },
+                    { key: 'completeRate', label: '年度培训课时完成率' },
+                  ]}
+                  markLine={1}
+                ></ResultCharts>
+              </div>
             </Tabs.TabPane>
+
             <Tabs.TabPane key="3" tab="培训-讲师表">
               <Table
                 columns={this.state.tableColumnsC}
@@ -644,6 +679,15 @@ class Result extends React.Component<IProps, IState> {
                 pagination={false}
                 scroll={{ x: 'max-content' }}
               ></Table>
+              <ResultCharts
+                columns={this.state.tableColumnsC}
+                data={this.state.tableDataC.filter(item => !item.isCondition)}
+                title="讲师表"
+                dimensions={[
+                  { key: 'monthName', label: 'monthName' },
+                  { key: 'rate', label: '培训师利用率' },
+                ]}
+              ></ResultCharts>
             </Tabs.TabPane>
 
             {/* 必知必会表 */}
@@ -657,6 +701,16 @@ class Result extends React.Component<IProps, IState> {
                 pagination={false}
                 scroll={{ x: 'max-content' }}
               ></Table>
+
+              <ResultCharts
+                columns={this.state.tableColumnsD}
+                data={this.state.tableDataD.filter(item => !item.isCondition)}
+                title="评估表"
+                dimensions={[
+                  { key: 'monthName', label: 'monthName' },
+                  { key: 'passedRate', label: '合格率' },
+                ]}
+              ></ResultCharts>
 
               <List size="small">
                 {

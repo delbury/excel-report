@@ -6,6 +6,9 @@ import { EChartsFullOption } from 'echarts/lib/option';
 import echarts from 'echarts/lib/echarts';
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/title';
+import 'echarts/lib/component/legend';
+import 'echarts/lib/component/tooltip';
+import 'echarts/lib/component/markLine';
 // import 'echarts/lib/component/grid'; // 5.0.1 修复，需要添加此项
 import 'echarts/lib/coord/cartesian/Grid'; // 5.0.1 修复，移除此项
 import 'echarts/lib/coord/cartesian/Axis2D'; // 5.0.1 修复，移除此项
@@ -14,33 +17,94 @@ import 'echarts/lib/coord/cartesian/Axis2D'; // 5.0.1 修复，移除此项
 interface IProps {
   columns: TableColumns<any>;
   data: TableDataRow[];
+  title?: string;
+  dimensions: {
+    key: string;
+    label: string;
+  }[];
+  widthScale?: number;
+  markLine?: number;
 }
 
 const ResultCharts: React.FC<IProps> = function (props: IProps) {
   const lineChartEle = useRef<HTMLCanvasElement>(null);
+
+  // const total: TableDataRow[] = [];
+  // const other: Map<string, TableDataRow[]> = new Map();
+  // props.data.forEach(row => {
+  //   if (!row.isCondition) {
+  //     total.push(row);
+  //   } else {
+  //     if (other.has(row.unitName)) {
+  //       other.get(row.unitName)?.push(row);
+  //     } else {
+  //       other.set(row.unitName, [row]);
+  //     }
+  //   }
+  // });
+
   // 绘图，折线图
   useEffect(() => {
     if (!lineChartEle.current) return;
 
     const lineChart = echarts.init(lineChartEle.current, {},  {
-      height: lineChartEle.current?.parentElement?.offsetHeight ?? 400,
-      width: lineChartEle.current?.parentElement?.offsetWidth ?? 600,
+      // height: lineChartEle.current?.parentElement?.offsetHeight ?? 400,
+      // width: (lineChartEle.current?.parentElement?.offsetWidth ?? 600) * (props.widthScale ?? 1),
+      width: 800,
+      height: 350,
     });
+
+    const markLine = props.markLine ? [{
+      type: 'line',
+      markLine: {
+        silent: true,
+        data: [
+          {
+            name: '达标线',
+            yAxis: props.markLine ?? 0,
+          }
+        ],
+        label: {
+
+        },
+        lineStyle: {
+          width: 2
+        },
+      }
+    }] : [];
 
     const option: EChartsFullOption = {
       title: {
-        text: '标题',
+        text: props.title ?? '表',
         textAlign: 'center',
         left: '50%',
       },
+      legend: {
+        top: 30,
+        formatter(key) {
+          return props.dimensions.find(item => item.key === key)?.label ?? '';
+        }
+      },
+      grid: {
+        bottom: 30,
+      },
+      // tooltip: {
+      //   trigger: 'axis',
+      //   showContent: false,
+      // },
       xAxis: {
-        data: ['哦哦哦', '吼吼吼'],
+        type: 'category',
       },
       yAxis: {
         type: 'value',
       },
+      dataset: {
+        dimensions: props.dimensions.map(item => item.key),
+        source: props.data,
+      },
       series: [
-        { name: '啊啊啊', type: 'line', data: [1, 3] },
+        ...Array(props.dimensions.length - 1).fill({ type: 'line' }),
+        ...markLine,
       ],
     };
 
