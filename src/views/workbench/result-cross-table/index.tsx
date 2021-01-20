@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TableColumns, TableDataRow, TableColumnsMap } from '../index-types';
 import { Button, Tooltip, Table } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { TableDataRowNameList } from './columns-types';
 import { columnsNameList } from './columns';
 import { sheetFieldMap } from './sheet-fields-map';
+import { connect } from 'react-redux';
+import { Dispatch } from 'redux';
+import { actions } from '@/redux/actions/global';
 
 interface IProps {
   outerData: TableDataRow[];
   outerColumns: TableColumns;
-  outerColumnsMap: TableColumnsMap;
   currentSheetName: string;
+  getAllSheetData: () => Map<string, TableDataRow[]>;
+  toggleLoading: (status?: boolean) => void;
 }
 
 const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
@@ -34,7 +38,31 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   };
 
   // 生成全部名单
-  const handleGenerateTotalNameList = () => { };
+  const handleGenerateTotalNameList = () => {
+    props.toggleLoading(true);
+
+    setTimeout(() => {
+      const dataMap = props.getAllSheetData();
+      const list: TableDataRowNameList[] = [];
+
+      for (let [sheetName, data] of dataMap.entries()) {
+        const keyMap = sheetFieldMap.get(sheetName);
+        if (keyMap) {
+          data.forEach(item => list.push({
+            id: (idCount++).toString(),
+            unitName: item[keyMap.unitName],
+            name: item[keyMap.name],
+            phone: item[keyMap.phone],
+            station: item[keyMap.station],
+          }));
+        }
+      }
+      setTableDataNameList(list);
+      props.toggleLoading(false);
+
+    }, 0);
+
+  };
 
   return (
     <div className="workbench-result">
@@ -69,4 +97,11 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   );
 };
 
-export default ResultCrossTable;
+// export default ResultCrossTable;
+
+const dispatchToProps = (dispatch: Dispatch) => {
+  return {
+    toggleLoading: (status?: boolean) => dispatch(actions.toggleGlobalLoading(status)),
+  };
+};
+export default connect(undefined, dispatchToProps)(ResultCrossTable);

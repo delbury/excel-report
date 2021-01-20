@@ -8,7 +8,7 @@ import { connect } from 'react-redux';
 import { Dispatch, bindActionCreators } from 'redux';
 import { actions } from '@/redux/actions/global';
 import { StoreState } from '@/redux';
-import XLSX, { WorkBook } from 'xlsx';
+import XLSX, { WorkBook, WorkSheet } from 'xlsx';
 import BScroll, { BScrollInstance } from 'better-scroll';
 // import Analysis from './analysis';
 import Result from './result';
@@ -47,7 +47,7 @@ class Workbench extends React.Component<IProps, IState> {
   sheetScroll: BScrollInstance | null = null;
   tableColumnsCaches: { [key: string]: TableColumns } = {}; // 表头列配置缓存
   tableDataCaches: { [key: string]: TableData } = {}; // 表格数据缓存
-  tableColumnsMapCaches: { [key: string]: TableColumnsMap } = {}; // 表头配置hash缓存
+  // tableColumnsMapCaches: { [key: string]: TableColumnsMap } = {}; // 表头配置hash缓存
   constructor(props: IProps) {
     super(props);
     this.state = {
@@ -119,7 +119,7 @@ class Workbench extends React.Component<IProps, IState> {
     // 清除缓存
     this.tableColumnsCaches = {};
     this.tableDataCaches = {};
-    this.tableColumnsMapCaches = {};
+    // this.tableColumnsMapCaches = {};
 
     // 清除表
     this.setState({
@@ -137,30 +137,15 @@ class Workbench extends React.Component<IProps, IState> {
     this.switchSheet(ev.target.value);
   }
 
-  // 切换 sheet
-  switchSheet(sheetName: string) {
-    if (!this.workbook) return;
-
-    const sheet = this.workbook.Sheets[sheetName];
-    const ref: string = sheet?.['!autofilter']?.ref ?? sheet?.['!ref'] ?? '';
-
-    // 空表
-    if (!ref) {
-      this.setState({
-        tableColumns: [],
-      });
-      return;
-    }
-
-    // 已有缓存
+  // 构造表数据
+  createTableData(sheetName: string, sheet: WorkSheet, ref: string = sheet?.['!autofilter']?.ref ?? sheet?.['!ref'] ?? '') {
     if (sheetName in this.tableColumnsCaches) {
-      this.setState({
-        tableColumns: this.tableColumnsCaches[sheetName],
-        tableData: this.tableDataCaches[sheetName].slice(0, 20), // 取前 20 条
-        allTableData: this.tableDataCaches[sheetName],
-      });
-      return;
+      return {
+        header: this.tableColumnsCaches[sheetName],
+        body: this.tableDataCaches[sheetName],
+      };
     }
+    if (!ref) return { header: [], body: [] };
 
     const range = XLSX.utils.decode_range(ref); // 当前 sheet 的数据范围
 
@@ -198,7 +183,7 @@ class Workbench extends React.Component<IProps, IState> {
 
     // 构造表头、hash
     const header: TableColumns = [];
-    const headerMap: TableColumnsMap = new Map();
+    // const headerMap: TableColumnsMap = new Map();
     for (let col of validCols.values()) {
       const key = col + firstRow;
       const title = sheet[key].w + `(${col})`;
@@ -211,7 +196,7 @@ class Workbench extends React.Component<IProps, IState> {
         ellipsis: true,
       };
       header.push(obj);
-      headerMap.set(col, obj);
+      // headerMap.set(col, obj);
     }
 
     // 构造表数据
@@ -234,14 +219,66 @@ class Workbench extends React.Component<IProps, IState> {
       body.push(rowData);
     }
 
+    // 缓存
     this.tableColumnsCaches[sheetName] = header; // 缓存表头
     this.tableDataCaches[sheetName] = body; // 缓存数据
-    this.tableColumnsMapCaches[sheetName] = headerMap; // 缓存hash
+    // this.tableColumnsMapCaches[sheetName] = headerMap; // 缓存hash
+
+    return {
+      header,
+      body,
+      // headerMap,
+    };
+  }
+
+  // 切换 sheet
+  switchSheet(sheetName: string) {
+    if (!this.workbook) return;
+
+    const sheet = this.workbook.Sheets[sheetName];
+    const ref: string = sheet?.['!autofilter']?.ref ?? sheet?.['!ref'] ?? '';
+
+    // 空表
+    if (!ref) {
+      this.setState({
+        tableColumns: [],
+      });
+      return;
+    }
+
+    // 已有缓存
+    if (sheetName in this.tableColumnsCaches) {
+      this.setState({
+        tableColumns: this.tableColumnsCaches[sheetName],
+        tableData: this.tableDataCaches[sheetName].slice(0, 20), // 取前 20 条
+        allTableData: this.tableDataCaches[sheetName],
+      });
+      return;
+    }
+
+    const { header, body } = this.createTableData(sheetName, sheet, ref);
+    
     this.setState({
       tableColumns: header,
       tableData: body.slice(0, 20), // 取前 20 条
       allTableData: body,
     });
+  }
+
+  //构造所有表的数据
+  createTableDataAll = () => {
+    const dataMap: Map<string, TableDataRow[]> = new Map();
+
+    if (this.workbook) {
+      this.state.sheetNames.forEach(name => {
+        if (this.workbook) {
+          dataMap.set(name, this.createTableData(name, this.workbook.Sheets[name]).body);
+        }
+      });
+      
+    }
+
+    return dataMap;
   }
 
   componentDidMount() {
@@ -274,7 +311,7 @@ class Workbench extends React.Component<IProps, IState> {
   }
 
   render() {
-    const headerMap = this.tableColumnsMapCaches[this.state.currentSheet];
+    // const headerMap = this.tableColumnsMapCaches[this.state.currentSheet];
 
     return (
       <Layout className="workbench">
@@ -350,8 +387,8 @@ class Workbench extends React.Component<IProps, IState> {
                 <ResultCrossTable
                   outerColumns={this.state.tableColumns}
                   outerData={this.state.allTableData}
-                  outerColumnsMap={headerMap}
                   currentSheetName={this.state.currentSheet}
+                  getAllSheetData={this.createTableDataAll}
                 ></ResultCrossTable> : ''
             }
           </div>
