@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { TableDataRow, TableColumns } from './index';
+import { TableDataRow, TableColumns } from './index-types';
 import style from './style/chart.module.scss';
 
 import { EChartsFullOption } from 'echarts/lib/option';

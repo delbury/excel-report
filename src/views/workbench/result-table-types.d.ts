@@ -1,4 +1,4 @@
-import { TableDataRow } from './index';
+import { TableDataRow } from './index-types';
 
 interface Common {
   unitName: string;

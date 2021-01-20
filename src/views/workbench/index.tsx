@@ -1,10 +1,9 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router-dom';
-import { Layout, Upload, Button, Radio, Table } from 'antd';
+import { Layout, Upload, Button, Radio, Table, Tooltip } from 'antd';
 import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
 import { RadioChangeEvent } from 'antd/es/radio';
-import { ColumnsType, ColumnType } from 'antd/es/table';
-import { UploadOutlined } from '@ant-design/icons';
+import { UploadOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import { Dispatch, bindActionCreators } from 'redux';
 import { actions } from '@/redux/actions/global';
@@ -13,21 +12,18 @@ import XLSX, { WorkBook } from 'xlsx';
 import BScroll, { BScrollInstance } from 'better-scroll';
 // import Analysis from './analysis';
 import Result from './result';
+import ResultCrossTable from './result-cross-table';
 import { fetchTestFile } from '@/lib/util';
+import {
+  TableDataRow,
+  TableData,
+  TableColumn,
+  TableColumns,
+  TableColumnsMap,
+} from './index-types';
 
-const { Content } = Layout;
 
-export interface TableDataRow {
-  id: string;
-  [key: string]: any;
-}
-// interface ColumnMore {
-//   editable?: boolean;
-// }
-export type TableData = TableDataRow[];
-export type TableColumn<T = object> = ColumnType<T>;
-export type TableColumns<T = object> = ColumnsType<T>;
-export type TableColumnsMap = Map<string, TableColumn>;
+enum AnalysisTypes { Train, Score }
 
 interface IProps extends RouteComponentProps {
   loading: boolean;
@@ -40,13 +36,11 @@ interface IState {
   tableData: TableData;
   tableColumns: TableColumns;
   allTableData: TableData;
+  currentAnalysisType: AnalysisTypes; // 当前分析处理的表格类型
 }
 
-const uploadConfig: UploadProps = {
-  accept: '.xlsx, .xls',
-};
-
-
+const { Content } = Layout;
+const EMPTY_COLUMNS_TITLE: string = '暂无，请导入文件';
 class Workbench extends React.Component<IProps, IState> {
   workbook: WorkBook | null = null;
   sheetsWrapper: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
@@ -61,8 +55,9 @@ class Workbench extends React.Component<IProps, IState> {
       sheetNames: [],
       currentSheet: '',
       tableData: [],
-      tableColumns: [],
+      tableColumns: [{ title: EMPTY_COLUMNS_TITLE }],
       allTableData: [],
+      currentAnalysisType: AnalysisTypes.Score,
     };
   }
 
@@ -86,7 +81,7 @@ class Workbench extends React.Component<IProps, IState> {
   }
 
   // 加载文件
-  loadFile = (file: File | Blob | undefined | null) => {
+  loadFile = (file: File | Blob | undefined | null, cb?: (wb?: WorkBook | null) => void) => {
     if (!file) return;
 
     const fileReader: FileReader = new FileReader();
@@ -113,7 +108,7 @@ class Workbench extends React.Component<IProps, IState> {
       });
 
       // @ts-ignore
-      window.workbook = this.workbook;
+      window.workbook = cb;
     };
     
     fileReader.readAsArrayBuffer(file); // 读取文件
@@ -128,7 +123,7 @@ class Workbench extends React.Component<IProps, IState> {
 
     // 清除表
     this.setState({
-      tableColumns: [],
+      tableColumns: [{ title: EMPTY_COLUMNS_TITLE }],
       tableData: [],
       sheetNames: [],
       currentSheet: '',
@@ -287,7 +282,7 @@ class Workbench extends React.Component<IProps, IState> {
           <div className="workbench-operation">
             <div className="workbench-operation-left">
               <Upload
-                {...uploadConfig}
+                accept=".xlsx, .xls"
                 fileList={this.state.fileList}
                 beforeUpload={this.handleBeforeUpload}
                 onChange={this.uploadOnChange}
@@ -295,9 +290,17 @@ class Workbench extends React.Component<IProps, IState> {
                 <Button
                   size="small"
                   icon={<UploadOutlined />}
-                >选择本地文件</Button>
-              </Upload>
+                >导入本地文件</Button>
 
+                <Tooltip
+                  title="预览只展示前20行数据"
+                  placement="right"
+                  className="mg-l-10"
+                >
+                  <InfoCircleOutlined />
+                </Tooltip>
+              </Upload>
+              
               {/* <Button size="small" onClick={() => this.test('/test/test-file2.xlsx')}>加载必知必会表</Button> */}
             </div>
             <div className="workbench-operation-right">
@@ -311,19 +314,46 @@ class Workbench extends React.Component<IProps, IState> {
             </div>
           </div>
           <div className="workbench-preview">
-            <Table
-              columns={this.state.tableColumns}
-              dataSource={this.state.tableData}
-              size="small"
-              bordered
-              scroll={{ x: 'max-content', y: 150 }}
-              rowKey="id"
-              pagination={false}
-              sticky={true}
-            />
+            <div className="workbench-preview-main-table-container">
+              <Table
+                columns={this.state.tableColumns}
+                dataSource={this.state.tableData}
+                size="small"
+                bordered
+                scroll={{ x: 'max-content', y: 150 }}
+                rowKey="id"
+                pagination={false}
+                sticky={true}
+              />
+
+              <div className="additional-toolbar">
+                <Radio.Group
+                  options={[
+                    { label: '培训分析处理', value: AnalysisTypes.Train },
+                    { label: '考评成绩处理', value: AnalysisTypes.Score },
+                  ]}
+                  value={this.state.currentAnalysisType}
+                  optionType="button"
+                  size="small"
+                  onChange={(ev) => this.setState({ currentAnalysisType: ev.target.value })}
+                ></Radio.Group>
+              </div>
+            </div>
         
             {/* <Analysis columns={this.state.tableColumns} columnsMap={headerMap} data={ this.state.tableData } /> */}
-            <Result outerColumns={ this.state.tableColumns } outerData={ this.state.allTableData }></Result>
+            {
+              this.state.currentAnalysisType === AnalysisTypes.Train ?
+                <Result outerColumns={this.state.tableColumns} outerData={this.state.allTableData}></Result> : ''
+            }
+            {
+              this.state.currentAnalysisType === AnalysisTypes.Score ?
+                <ResultCrossTable
+                  outerColumns={this.state.tableColumns}
+                  outerData={this.state.allTableData}
+                  outerColumnsMap={headerMap}
+                  currentSheetName={this.state.currentSheet}
+                ></ResultCrossTable> : ''
+            }
           </div>
           
         </Content>

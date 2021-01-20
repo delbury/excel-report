@@ -1,4 +1,4 @@
-import { TableColumns } from './index';
+import { TableColumns } from './index-types';
 import { Input } from 'antd';
 import Result from './result';
 import { TableDataRowA, TableDataRowB, TableDataRowC, TableDataRowD } from './result-table-types';

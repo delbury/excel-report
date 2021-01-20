@@ -1,5 +1,5 @@
 import React from 'react';
-import { TableColumns, TableDataRow } from './index';
+import { TableColumns, TableDataRow } from './index-types';
 import { Table, Button, Select, Tabs, List } from 'antd';
 import { columnsA, getColumnsB, getColumnsC, columnsD } from './result-columns';
 import XLSX, { Sheet, ColInfo, WorkBook } from 'xlsx';
@@ -655,7 +655,7 @@ class Result extends React.Component<IProps, IState> {
                     { key: 'completeRate', label: '年度培训课时完成率' },
                   ]}
                   markLine={1}
-                  ></ResultCharts>
+                ></ResultCharts>
                 <ResultCharts
                   columns={this.state.tableColumnsB}
                   data={this.state.tableDataB.filter(item => !item.isCondition && item.type === 'P')}

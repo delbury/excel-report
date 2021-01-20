@@ -1,4 +1,4 @@
-import { TableColumnsMap, TableData } from './index';
+import { TableColumnsMap, TableData } from './index-types';
 import { Row } from './analysis';
 import { ReactInstance } from 'react';
 

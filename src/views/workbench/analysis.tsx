@@ -3,7 +3,7 @@ import { Button, Tooltip, Input, Form, Tag, Select } from 'antd';
 import { PlusOutlined, MinusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { FormInstance } from 'antd/es/form';
 import { validateFormula, resolveFormula, formatFormula } from './tools';
-import { TableColumnsMap, TableData, TableColumns } from './index';
+import { TableColumnsMap, TableData, TableColumns } from './index-types';
 import DelPopselect, { Option as DelPopselectOption } from '@/components/del-popselect';
 
 const FORM_FORMULA_NAME = 'formFormula';
