@@ -108,7 +108,7 @@ class Workbench extends React.Component<IProps, IState> {
       });
 
       // @ts-ignore
-      window.workbook = cb;
+      window.workbook = this.workbook;
     };
     
     fileReader.readAsArrayBuffer(file); // 读取文件
@@ -292,7 +292,7 @@ class Workbench extends React.Component<IProps, IState> {
       });
     }
 
-    this.test();
+    this.test('/test/成绩1.xlsx');
   }
 
   componentDidUpdate(prevProps: IProps, prevState: IState) {

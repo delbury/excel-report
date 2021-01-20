@@ -165,6 +165,8 @@ $border-base: 1px solid rgb(240, 242, 245);
     }
 
     &-btns {
+      display: flex;
+      align-items: center;
       margin-right: 50px;
       flex-shrink: 0;
 
@@ -175,6 +177,29 @@ $border-base: 1px solid rgb(240, 242, 245);
 
     .ant-tabs-content-holder {
       overflow: auto;
+    }
+
+    &-upload {
+      position: relative;
+
+      .ant-upload-list {
+        display: none;
+        padding-bottom: 10px;
+        position: absolute;
+        left: 0;
+        z-index: 9;
+        background-color: #fff;
+        border-radius: 3px;
+        box-shadow: 1px 1px 5px #aaa;
+      }
+
+      &:hover .ant-upload-list {
+        display: block;
+      }
+
+      &.is-empty .ant-upload-list {
+        display: none !important;
+      }
     }
   }
 }
