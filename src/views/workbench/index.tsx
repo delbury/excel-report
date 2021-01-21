@@ -21,7 +21,7 @@ import {
   TableColumns,
   TableColumnsMap,
 } from './index-types';
-
+import { TEST_FILE_URL } from '@/views/workbench/consts';
 
 enum AnalysisTypes { Train, Score }
 
@@ -41,7 +41,7 @@ interface IState {
 
 const { Content } = Layout;
 const EMPTY_COLUMNS_TITLE: string = '暂无，请导入文件';
-class Workbench extends React.Component<IProps, IState> {
+class Workbench extends React.PureComponent<IProps, IState> {
   workbook: WorkBook | null = null;
   sheetsWrapper: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
   sheetScroll: BScrollInstance | null = null;
@@ -55,7 +55,7 @@ class Workbench extends React.Component<IProps, IState> {
       sheetNames: [],
       currentSheet: '',
       tableData: [],
-      tableColumns: [{ title: EMPTY_COLUMNS_TITLE }],
+      tableColumns: [{ title: EMPTY_COLUMNS_TITLE, titleName: EMPTY_COLUMNS_TITLE }],
       allTableData: [],
       currentAnalysisType: AnalysisTypes.Score,
     };
@@ -123,7 +123,7 @@ class Workbench extends React.Component<IProps, IState> {
 
     // 清除表
     this.setState({
-      tableColumns: [{ title: EMPTY_COLUMNS_TITLE }],
+      tableColumns: [{ title: EMPTY_COLUMNS_TITLE, titleName: EMPTY_COLUMNS_TITLE }],
       tableData: [],
       sheetNames: [],
       currentSheet: '',
@@ -189,6 +189,7 @@ class Workbench extends React.Component<IProps, IState> {
       const title = sheet[key].w + `(${col})`;
       const length = title.length;
       const obj: TableColumn = {
+        titleName: title,
         title,
         key: col,
         dataIndex: col,
@@ -292,8 +293,7 @@ class Workbench extends React.Component<IProps, IState> {
       });
     }
 
-    this.test();
-    // this.test('/test/成绩1.xlsx');
+    this.test(TEST_FILE_URL);
   }
 
   componentDidUpdate(prevProps: IProps, prevState: IState) {
@@ -305,7 +305,7 @@ class Workbench extends React.Component<IProps, IState> {
   }
 
   // 测试
-  test(url?: string) {
+  test(url: string) {
     fetchTestFile(url).then(blob => {
       this.loadFile(blob);
     }).catch(err => console.log(err)); // 获取测试文件

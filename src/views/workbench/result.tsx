@@ -66,11 +66,6 @@ interface IState {
     table1: string;
     table2: string;
   };
-  currentFilterKeyword: string;
-  filtersOptions: {
-    label: string;
-    value: string;
-  }[];
 }
 
 class Result extends React.Component<IProps, IState> {
@@ -102,25 +97,8 @@ class Result extends React.Component<IProps, IState> {
         table1: 'G',
         table2: 'H',
       },
-      currentFilterKeyword: '',
-      filtersOptions: [],
     };
   }
-
-  // componentDidUpdate(prevProps: IProps, prevState: IState) {
-  //   if (this.props.outerData !== prevProps.outerData) {
-  //     const set: Set<string> = new Set();
-  //     this.props.outerData.forEach(item => set.add(item[this.state.filters.table1]));
-  //     const options = [];
-  //     for (let val of set.values()) {
-  //       options.push({
-  //         label: val,
-  //         value: val,
-  //       });
-  //     }
-  //     this.setState({ filtersOptions: options });
-  //   }
-  // }
 
   // 生成表格 A
   calcDataA(condition?: string) {
@@ -237,6 +215,7 @@ class Result extends React.Component<IProps, IState> {
         id: (this.idCount++).toString(),
         ...params,
         monthName: params.month + '月',
+        nowPersonCount: params.type === 'P' ? 122 : params.type === 'M' ? 19 : undefined,
       });
     }
 
@@ -259,6 +238,25 @@ class Result extends React.Component<IProps, IState> {
     //     return res;
     //   }
     // });
+
+    // 计算初始值
+    for (let index in dataB) {
+      const value: number = dataB[index].nowPersonCount ?? 0;
+      const rows = dataB;
+      rows[index].averTrainHours = value ? rows[index].trainHours / value : undefined;
+
+      const sameTableRows = rows.filter(row => row.type === rows[index].type && row.unitName === rows[index].unitName);
+      const k: number = rows[index].type === 'M' ? 42 : rows[index].type === 'P' ? 60 : 1; // 年度培训课时完成率系数
+      // 计算年度累计人均课时
+      sameTableRows.forEach((row, ind) => {
+        if (ind === 0) {
+          row.yearAverHours = row.averTrainHours ?? 0;
+        } else {
+          row.yearAverHours = (row.averTrainHours ?? 0) + (rows[ind - 1].yearAverHours ?? 0);
+        }
+        row.completeRate = (row.yearAverHours ?? 0) / k;
+      });
+    }
 
     !condition && this.setState({ tableDataB: dataB });
     return dataB;
@@ -531,7 +529,7 @@ class Result extends React.Component<IProps, IState> {
     const res: any = [];
     const colInfos: ColInfo[] = [];
     columns.forEach((item, index) => {
-      const title: string = (item.title ?? '').toString();
+      const title: string = item.titleName.toString();
       map.set((item.key ?? '').toString(), title);
       colInfos.push({
         wpx: Number(item.width ?? 100),
@@ -569,34 +567,7 @@ class Result extends React.Component<IProps, IState> {
             <Button size="small" onClick={ () => this.handleExportAll() }>整合导出</Button>
           </div>
 
-          <div className="workbench-result-config">
-            {
-              // <Select
-              //   className="workbench-result-config-item"
-              //   size="small"
-              //   placeholder="筛选条件"
-              //   options={this.state.filtersOptions}
-              //   value={this.state.currentFilterKeyword}
-              //   onChange={(ev) => this.setState({ currentFilterKeyword: ev })}
-              //   allowClear
-              // >
-              // </Select>
-            }
-            {
-              // toolbarConfigItems.map((item) => (
-              //   <Select
-              //     className="workbench-result-config-item"
-              //     key={item.key}
-              //     data-label={item.key}
-              //     size="small"
-              //     placeholder={`选择${item.label}`}
-              //     options={selectOptions}
-              //     value={this.state.selectedColumnsMap[item.key]}
-              //   >
-              //   </Select>
-              // ))
-            }
-          </div>
+          {/* <div className="workbench-result-config"></div> */}
         </div>
         <div className="workbench-result-tables">
           <Tabs defaultActiveKey="1" tabBarStyle={{ padding: '0 10px' }} style={{ height: '100%' }}>

@@ -6,6 +6,7 @@ import { TableDataRowA, TableDataRowB, TableDataRowC, TableDataRowD } from './re
 export const columnsA: TableColumns<TableDataRowA> = [
   {
     title: '单位',
+    titleName: '单位',
     key: 'unitName',
     dataIndex: 'unitName',
     ellipsis: true,
@@ -14,6 +15,7 @@ export const columnsA: TableColumns<TableDataRowA> = [
   },
   {
     title: '月份',
+    titleName: '月份',
     key: 'monthName',
     dataIndex: 'monthName',
     ellipsis: true,
@@ -22,6 +24,7 @@ export const columnsA: TableColumns<TableDataRowA> = [
   },
   {
     title: '培训项目数',
+    titleName: '培训项目数',
     key: 'trainProjectCount',
     dataIndex: 'trainProjectCount',
     ellipsis: true,
@@ -29,6 +32,7 @@ export const columnsA: TableColumns<TableDataRowA> = [
   },
   {
     title: '培训总人次',
+    titleName: '培训总人次',
     key: 'trainPersonCount',
     dataIndex: 'trainPersonCount',
     ellipsis: true,
@@ -36,6 +40,7 @@ export const columnsA: TableColumns<TableDataRowA> = [
   },
   {
     title: '理论培训课时',
+    titleName: '理论培训课时',
     key: 'theoryHours',
     dataIndex: 'theoryHours',
     ellipsis: true,
@@ -43,29 +48,12 @@ export const columnsA: TableColumns<TableDataRowA> = [
   },
   {
     title: '实操培训课时',
+    titleName: '实操培训课时',
     key: 'practiceHours',
     dataIndex: 'practiceHours',
     ellipsis: true,
     width: 100,
   },
-  // {
-  //   title: '评估项目数',
-  //   key: 'assessProjectCount',
-  //   dataIndex: 'assessProjectCount',
-  //   ellipsis: true,
-  // },
-  // {
-  //   title: '评估人次',
-  //   key: 'assessPersonCount',
-  //   dataIndex: 'assessPersonCount',
-  //   ellipsis: true,
-  // },
-  // {
-  //   title: '合格率',
-  //   key: 'rate',
-  //   dataIndex: 'rate',
-  //   ellipsis: true,
-  // },
 ];
 
 // export const columnsB: TableColumns = [];
@@ -80,6 +68,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
   return [
     {
       title: '单位',
+      titleName: '单位',
       key: 'unitName',
       dataIndex: 'unitName',
       ellipsis: true,
@@ -88,6 +77,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
     },
     {
       title: '岗位',
+      titleName: '岗位',
       key: 'station',
       dataIndex: 'station',
       ellipsis: true,
@@ -96,6 +86,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
     },
     {
       title: '月份',
+      titleName: '月份',
       key: 'monthName',
       dataIndex: 'monthName',
       ellipsis: true,
@@ -104,10 +95,11 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
     },
     {
       title: '现员人数',
+      titleName: '现员人数',
       key: 'nowPersonCount',
       dataIndex: 'nowPersonCount',
       ellipsis: true,
-      width: 100,
+      width: 120,
       fixed: 'left',
       render: (text, record, index) => {
         return (
@@ -116,6 +108,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
             size="small"
             min={0}
             step={1}
+            value={record.nowPersonCount}
             onChange={(ev) => {
               const value: number = +ev.target.value;
               const rows = [...that.state.tableDataB];
@@ -144,6 +137,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
     },
     {
       title: '培训课时',
+      titleName: '培训课时',
       key: 'trainHours',
       dataIndex: 'trainHours',
       ellipsis: true,
@@ -151,6 +145,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
     },
     {
       title: '培训条数',
+      titleName: '培训条数',
       key: 'trainCount',
       dataIndex: 'trainCount',
       ellipsis: true,
@@ -158,6 +153,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
     },
     {
       title: '培训人次',
+      titleName: '培训人次',
       key: 'trainPersonCount',
       dataIndex: 'trainPersonCount',
       ellipsis: true,
@@ -165,6 +161,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
     },
     {
       title: '人均培训课时（小时）',
+      titleName: '人均培训课时（小时）',
       key: 'averTrainHours',
       dataIndex: 'averTrainHours',
       ellipsis: true,
@@ -172,6 +169,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
     },
     {
       title: '年度累计人均课时（小时）',
+      titleName: '年度累计人均课时（小时）',
       key: 'yearAverHours',
       dataIndex: 'yearAverHours',
       ellipsis: true,
@@ -179,6 +177,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
     },
     {
       title: '年度培训课时完成率',
+      titleName: '年度培训课时完成率',
       key: 'completeRate',
       dataIndex: 'completeRate',
       ellipsis: true,
@@ -191,6 +190,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
   return [
     {
       title: '单位',
+      titleName: '单位',
       key: 'unitName',
       dataIndex: 'unitName',
       ellipsis: true,
@@ -199,6 +199,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
     },
     {
       title: '月份',
+      titleName: '月份',
       key: 'monthName',
       dataIndex: 'monthName',
       ellipsis: true,
@@ -207,6 +208,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
     },
     {
       title: '培训师人数',
+      titleName: '培训师人数',
       key: 'personCount',
       dataIndex: 'personCount',
       ellipsis: true,
@@ -234,6 +236,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
     },
     {
       title: '培训师授课人数',
+      titleName: '培训师授课人数',
       key: 'personCourseCount',
       dataIndex: 'personCourseCount',
       ellipsis: true,
@@ -241,6 +244,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
     },
     {
       title: '培训师利用率',
+      titleName: '培训师利用率',
       key: 'rate',
       dataIndex: 'rate',
       ellipsis: true,
@@ -248,6 +252,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
     },
     {
       title: '总授课学时',
+      titleName: '总授课学时',
       key: 'totalHours',
       dataIndex: 'totalHours',
       ellipsis: true,
@@ -255,6 +260,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
     },
     {
       title: '人均授课学时',
+      titleName: '人均授课学时',
       key: 'averHours',
       dataIndex: 'averHours',
       ellipsis: true,
@@ -266,6 +272,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
 export const columnsD: TableColumns<TableDataRowD> = [
   {
     title: '单位',
+    titleName: '单位',
     key: 'unitName',
     dataIndex: 'unitName',
     ellipsis: true,
@@ -274,6 +281,7 @@ export const columnsD: TableColumns<TableDataRowD> = [
   },
   {
     title: '月份',
+    titleName: '月份',
     key: 'monthName',
     dataIndex: 'monthName',
     ellipsis: true,
@@ -282,6 +290,7 @@ export const columnsD: TableColumns<TableDataRowD> = [
   },
   {
     title: '评估项目数',
+    titleName: '评估项目数',
     key: 'projectCount',
     dataIndex: 'projectCount',
     ellipsis: true,
@@ -289,6 +298,7 @@ export const columnsD: TableColumns<TableDataRowD> = [
   },
   {
     title: '评估人次',
+    titleName: '评估人次',
     key: 'assessCount',
     dataIndex: 'assessCount',
     ellipsis: true,
@@ -296,6 +306,7 @@ export const columnsD: TableColumns<TableDataRowD> = [
   },
   {
     title: '合格率',
+    titleName: '合格率',
     key: 'passedRate',
     dataIndex: 'passedRate',
     ellipsis: true,
@@ -303,6 +314,7 @@ export const columnsD: TableColumns<TableDataRowD> = [
   },
   {
     title: '通过人次',
+    titleName: '通过人次',
     key: 'passedCount',
     dataIndex: 'passedCount',
     ellipsis: true,
@@ -310,6 +322,7 @@ export const columnsD: TableColumns<TableDataRowD> = [
   },
   {
     title: '未通过人次',
+    titleName: '未通过人次',
     key: 'failedCount',
     dataIndex: 'failedCount',
     ellipsis: true,
@@ -317,6 +330,7 @@ export const columnsD: TableColumns<TableDataRowD> = [
   },
   {
     title: '理论验收人次',
+    titleName: '理论验收人次',
     key: 'theoryCount',
     dataIndex: 'theoryCount',
     ellipsis: true,
@@ -324,6 +338,7 @@ export const columnsD: TableColumns<TableDataRowD> = [
   },
   {
     title: '实操验收人次',
+    titleName: '实操验收人次',
     key: 'trainCount',
     dataIndex: 'trainCount',
     ellipsis: true,

@@ -12,7 +12,7 @@ export enum EnumColumns {
   Code = 'H', // 员工编码
 }
 export interface ResolvedDataType {
-  [key: string]: EnumColumns
+  [key: string]: EnumColumns;
 } 
 
 // 解析成绩 excel 文件
@@ -46,11 +46,11 @@ export const resolveScoreExcelFile = (file: File | Blob): Promise<{}[]> => {
 };
 
 // 过滤一次提交的成绩和二次提交的成绩
-interface SeparateScoreDateTimesReturnType {
+export interface SeparateScoreDataTimesReturnType {
   first: ResolvedDataType[];
   second: ResolvedDataType[];
 }
-export const separateScoreDateTimes = (totalData: ResolvedDataType[]): SeparateScoreDateTimesReturnType => {
+export const separateScoreDateTimes = (totalData: ResolvedDataType[]): SeparateScoreDataTimesReturnType => {
   // 按时间排序，升序
   totalData.sort((a, b) => {
     if (a[EnumColumns.Time] > b[EnumColumns.Time]) {

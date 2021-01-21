@@ -9,7 +9,13 @@ import { sheetFieldMap } from './sheet-fields-map';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import { actions } from '@/redux/actions/global';
-import { resolveScoreExcelFile, ResolvedDataType, separateScoreDateTimes } from './resolve-excel';
+import {
+  resolveScoreExcelFile,
+  ResolvedDataType,
+  separateScoreDateTimes,
+  SeparateScoreDataTimesReturnType,
+  EnumColumns,
+} from './resolve-excel';
 
 type FilteredDataMap = Map<string, TableDataRowNameList[]>;
 enum EnumTimes { First, Second };
@@ -27,6 +33,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   // const [filteredDataMap, setFilteredDataMap] = useState<FilteredDataMap>(new Map());
   const [fileList, setFileList] = useState<UploadFile[]>([]); // 成绩文件列表
   const [timesScores, setTimesScores] = useState<EnumTimes>(EnumTimes.First); // 第几次提交
+  const [separatedData, setSeparatedData] = useState<SeparateScoreDataTimesReturnType | null>(null);
 
   let idCount: number = Date.now();
   /** 
@@ -109,7 +116,55 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       }
 
       const timesData = separateScoreDateTimes(totalData);
-      console.log(timesData);
+      setSeparatedData(timesData);
+
+      const map: Map<string, TableDataRowNameList> = new Map(); // hash 用于搜索优化
+      // 计算1次提交成绩
+      const unmatchedFirstData: ResolvedDataType[] = []; // 在名单内未匹配到的分数
+      const firstData: TableDataRowNameList[] = JSON.parse(JSON.stringify(tableDataNameList));
+      if (timesData.first) {
+        firstData.forEach(item => map.set(item.name + item.phone, item)); // map 化，优化处理速度
+        
+        timesData.first.forEach(item => {
+          const hash: string = item[EnumColumns.Name] + item[EnumColumns.Phone];
+          if (map.has(hash)) {
+            const row = map.get(hash);
+            if (row) {
+              row.score = Number(item[EnumColumns.Score]);
+              row.result = item[EnumColumns.Pass];
+            }
+          } else {
+            unmatchedFirstData.push(item);
+          }
+        });
+      }
+
+      // 计算2次提交成绩
+      map.clear();
+      const unmatchedSecondData: ResolvedDataType[] = []; // 在名单内未匹配到的分数
+      const secondData: TableDataRowNameList[] = JSON.parse(JSON.stringify(tableDataNameList));
+      if (timesData.second) {
+        secondData.forEach(item => map.set(item.name + item.phone, item)); // map 化，优化处理速度
+        
+        timesData.second.forEach(item => {
+          const hash: string = item[EnumColumns.Name] + item[EnumColumns.Phone];
+          if (map.has(hash)) {
+            const row = map.get(hash);
+            if (row) {
+              row.score = Number(item[EnumColumns.Score]);
+              row.result = item[EnumColumns.Pass];
+            }
+          } else {
+            unmatchedSecondData.push(item);
+          }
+        });
+      }
+
+      if (timesScores === EnumTimes.First) {
+        setTableDataNameList(firstData);
+      } else if(timesScores === EnumTimes.Second) {
+        setTableDataNameList(secondData);
+      }
 
     } catch {
       //
@@ -147,9 +202,9 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
             </Badge>
           </Upload>
 
-          <Button size="small" onClick={() => resolveScoreExcelFiles()}>统计成绩</Button>
+          <Button size="small" type="primary" onClick={() => resolveScoreExcelFiles()}>确认导入</Button>
           {
-            <Radio.Group
+            separatedData ? <Radio.Group
               options={[
                 { label: '一次提交', value: EnumTimes.First },
                 { label: '二次提交', value: EnumTimes.Second },
@@ -158,7 +213,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
               optionType="button"
               size="small"
               onChange={(ev) => setTimesScores(ev.target.value)}
-            ></Radio.Group>
+            ></Radio.Group> : null
           }
         </div>
       </div>

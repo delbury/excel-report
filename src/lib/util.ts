@@ -1,6 +1,4 @@
-const testFileUrl: string = '/test/test-file.xlsx';
-
-export const fetchTestFile: (url?: string) => Promise<Blob | null> = function (url: string = testFileUrl) {
+export const fetchTestFile: (url: string) => Promise<Blob | null> = function (url: string) {
   return new Promise(async (resolve, reject) => {
     try {
       const res = await window.fetch(url);

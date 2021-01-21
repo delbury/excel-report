@@ -4,6 +4,7 @@ import { TableDataRowNameList } from './columns-types';
 export const columnsNameList: TableColumns<TableDataRowNameList> = [
   {
     title: '序号',
+    titleName: '序号',
     key: '_order',
     dataIndex: '_order',
     ellipsis: true,
@@ -12,6 +13,7 @@ export const columnsNameList: TableColumns<TableDataRowNameList> = [
   },
   {
     title: '单位',
+    titleName: '单位',
     key: 'unitName',
     dataIndex: 'unitName',
     ellipsis: true,
@@ -19,6 +21,7 @@ export const columnsNameList: TableColumns<TableDataRowNameList> = [
   },
   {
     title: '姓名',
+    titleName: '姓名',
     key: 'name',
     dataIndex: 'name',
     ellipsis: true,
@@ -26,6 +29,7 @@ export const columnsNameList: TableColumns<TableDataRowNameList> = [
   },
   {
     title: '手机号码',
+    titleName: '手机号码',
     key: 'phone',
     dataIndex: 'phone',
     ellipsis: true,
@@ -33,6 +37,7 @@ export const columnsNameList: TableColumns<TableDataRowNameList> = [
   },
   {
     title: '岗位',
+    titleName: '岗位',
     key: 'station',
     dataIndex: 'station',
     ellipsis: true,
@@ -40,6 +45,7 @@ export const columnsNameList: TableColumns<TableDataRowNameList> = [
   },
   {
     title: '成绩',
+    titleName: '成绩',
     key: 'score',
     dataIndex: 'score',
     ellipsis: true,
@@ -47,6 +53,7 @@ export const columnsNameList: TableColumns<TableDataRowNameList> = [
   },
   {
     title: '结果',
+    titleName: '结果',
     key: 'result',
     dataIndex: 'result',
     ellipsis: true,
