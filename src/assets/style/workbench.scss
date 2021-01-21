@@ -187,10 +187,10 @@ $border-base: 1px solid rgb(240, 242, 245);
         padding-bottom: 10px;
         position: absolute;
         left: 0;
-        z-index: 9;
         background-color: #fff;
         border-radius: 3px;
         box-shadow: 1px 1px 5px #aaa;
+        z-index: 9;
       }
 
       &:hover .ant-upload-list {

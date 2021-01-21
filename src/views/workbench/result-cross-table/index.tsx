@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { TableColumns, TableDataRow, TableColumnsMap } from '../index-types';
-import { Button, Tooltip, Table, Upload } from 'antd';
+import { Button, Tooltip, Table, Upload, Badge, message, Radio } from 'antd';
 import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { TableDataRowNameList } from './columns-types';
 import { columnsNameList } from './columns';
 import { sheetFieldMap } from './sheet-fields-map';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import { actions } from '@/redux/actions/global';
-import { resolveScoreExcelFile } from './resolve-excel';
+import { resolveScoreExcelFile, ResolvedDataType, separateScoreDateTimes } from './resolve-excel';
 
 type FilteredDataMap = Map<string, TableDataRowNameList[]>;
+enum EnumTimes { First, Second };
 
 interface IProps {
   outerData: TableDataRow[];
@@ -22,12 +23,14 @@ interface IProps {
 }
 
 const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
-  const [tableDataNameList, setTableDataNameList] = useState<TableDataRowNameList[]>([]);
-  const [filteredDataMap, setFilteredDataMap] = useState<FilteredDataMap>(new Map());
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [tableDataNameList, setTableDataNameList] = useState<TableDataRowNameList[]>([]); // 数据列表
+  // const [filteredDataMap, setFilteredDataMap] = useState<FilteredDataMap>(new Map());
+  const [fileList, setFileList] = useState<UploadFile[]>([]); // 成绩文件列表
+  const [timesScores, setTimesScores] = useState<EnumTimes>(EnumTimes.First); // 第几次提交
 
-  // 生成名单，单张表
   let idCount: number = Date.now();
+  /** 
+  // 生成名单，单张表
   const handleGenerateNameList = () => {
     props.toggleLoading(true);
 
@@ -46,8 +49,8 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       setTableDataNameList(list);
       props.toggleLoading(false);
     }, 0);
-
   };
+  */
 
   // 生成全部名单
   const handleGenerateTotalNameList = () => {
@@ -76,7 +79,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
           });
         }
       }
-      setFilteredDataMap(tempFilteredDataMap);
+      // setFilteredDataMap(tempFilteredDataMap);
       setTableDataNameList(list);
       props.toggleLoading(false);
 
@@ -84,12 +87,35 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
 
   };
 
-  // 处理多个成绩 excel
-  const resolveScoreExcelFiles = () => {
-    // console.log(XLSX.utils.sheet_to_json(this.workbook.Sheets[this.workbook.SheetNames[0]], {
-    //   range: 8,
-    //   header: 'A',
-    // }));
+  // 统计成绩
+  const resolveScoreExcelFiles = async () => {
+    // if (!tableDataNameList.length) {
+    //   return message.warning('请先生成名单！');
+    // }
+
+    if (!fileList.length) {
+      return message.warning('请先导入成绩excel！');
+    }
+
+    props.toggleLoading(true);
+    try {
+      // 整合所有成绩
+      const totalData: ResolvedDataType[] = [];
+      for (let item of fileList) {
+        if (item.originFileObj) {
+          const data = await resolveScoreExcelFile(item.originFileObj);
+          totalData.push(...data);
+        }
+      }
+
+      const timesData = separateScoreDateTimes(totalData);
+      console.log(timesData);
+
+    } catch {
+      //
+    } finally {
+      props.toggleLoading(false);
+    }
   };
 
   return (
@@ -98,7 +124,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
         <div className="workbench-result-btns">
           <Button.Group size="small">
             <Button type="primary" onClick={() => handleGenerateTotalNameList()}>生成完整名单</Button>
-            <Button onClick={() => handleGenerateNameList()}>生成单表名单</Button>
+            {/* <Button onClick={() => handleGenerateNameList()}>生成单表名单</Button> */}
           </Button.Group>
 
           <Tooltip
@@ -116,10 +142,24 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
             multiple
             className={`workbench-result-upload${fileList.length ? '' : ' is-empty'}`}
           >
-            <Button size="small">导入成绩表</Button>
+            <Badge count={fileList.length} size="small" offset={[-8, -1]}>
+              <Button size="small" icon={<UploadOutlined />}>导入成绩excel</Button>
+            </Badge>
           </Upload>
 
-          <Button size="small">统计成绩</Button>
+          <Button size="small" onClick={() => resolveScoreExcelFiles()}>统计成绩</Button>
+          {
+            <Radio.Group
+              options={[
+                { label: '一次提交', value: EnumTimes.First },
+                { label: '二次提交', value: EnumTimes.Second },
+              ]}
+              value={timesScores}
+              optionType="button"
+              size="small"
+              onChange={(ev) => setTimesScores(ev.target.value)}
+            ></Radio.Group>
+          }
         </div>
       </div>
 

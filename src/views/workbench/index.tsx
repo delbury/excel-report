@@ -292,7 +292,8 @@ class Workbench extends React.Component<IProps, IState> {
       });
     }
 
-    this.test('/test/成绩1.xlsx');
+    this.test();
+    // this.test('/test/成绩1.xlsx');
   }
 
   componentDidUpdate(prevProps: IProps, prevState: IState) {
