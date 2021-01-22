@@ -19,7 +19,7 @@ import {
 } from './index-types';
 import { EnumTimes, EnumColumns } from './enums';
 
-type FilteredDataMap = Map<string, TableDataRowNameList[]>;
+// type FilteredDataMap = Map<string, TableDataRowNameList[]>;
 
 interface IProps {
   className?: string;
@@ -70,13 +70,13 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
 
     setTimeout(() => {
       const dataMap = props.getAllSheetData();
-      const tempFilteredDataMap: FilteredDataMap = new Map();
+      // const tempFilteredDataMap: FilteredDataMap = new Map();
       const list: TableDataRowNameList[] = [];
 
       for (let [sheetName, data] of dataMap.entries()) {
         const keyMap = sheetFieldMap.get(sheetName);
         const tempArr: TableDataRowNameList[] = [];
-        tempFilteredDataMap.set(sheetName, tempArr);
+        // tempFilteredDataMap.set(sheetName, tempArr);
         if (keyMap) {
           data.forEach(item => {
             const tempObj = {
@@ -168,15 +168,19 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
         });
       }
 
+      // 保存合并后的数据缓存
       setDataCaches({
         first: firstData,
         second: secondData,
       });
+
+      // 设置未匹配成绩的缓存
       setUnmatchedCaches({
         first: unmatchedFirstData,
         second: unmatchedSecondData,
       });
       
+      // 设置未匹配条数角标数字
       setUnmatchedDataCount(unmatchedFirstData.length + unmatchedSecondData.length);
       if (timesScores === EnumTimes.First) {
         setTableDataNameList(firstData);
@@ -222,32 +226,33 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
 
           <Button size="small" type="primary" onClick={() => resolveScoreExcelFiles()}>确认导入</Button>
           {
-            separatedData ? <Radio.Group
-              options={[
-                { label: '一次提交', value: EnumTimes.First },
-                { label: '二次提交', value: EnumTimes.Second },
-              ]}
-              value={timesScores}
-              optionType="button"
-              size="small"
-              onChange={(ev) => {
-                setTimesScores(ev.target.value);
-                props.toggleLoading(true);
-                if (ev.target.value === EnumTimes.First ) {
-                  setTableDataNameList(dataCahces.first);
-                } else if(ev.target.value === EnumTimes.Second ) {
-                  setTableDataNameList(dataCahces.second);
-                }
-                setTimeout(() => props.toggleLoading(false), 0);
-              }}
-            ></Radio.Group> : null
-          }
-          {
             separatedData ?
-              <UnmatchedModal
-                unmatchedDataCount={unmatchedDataCount}
-                unmatchedData={unmatchedCaches}
-              ></UnmatchedModal> : ''
+              <>
+                <Radio.Group
+                  options={[
+                    { label: '一次提交', value: EnumTimes.First },
+                    { label: '二次提交', value: EnumTimes.Second },
+                  ]}
+                  value={timesScores}
+                  optionType="button"
+                  size="small"
+                  onChange={(ev) => {
+                    setTimesScores(ev.target.value);
+                    props.toggleLoading(true);
+                    if (ev.target.value === EnumTimes.First ) {
+                      setTableDataNameList(dataCahces.first);
+                    } else if(ev.target.value === EnumTimes.Second ) {
+                      setTableDataNameList(dataCahces.second);
+                    }
+                    setTimeout(() => props.toggleLoading(false), 0);
+                  }}
+                ></Radio.Group>
+
+                <UnmatchedModal
+                  unmatchedDataCount={unmatchedDataCount}
+                  unmatchedData={unmatchedCaches}
+                ></UnmatchedModal>
+              </> : null
           }
         </div>
       </div>
