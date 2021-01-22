@@ -40,6 +40,7 @@ const toolbarConfigItems: ToolbarConfigItem[] = [
 interface IProps {
   outerData: TableDataRow[];
   outerColumns: TableColumns;
+  className?: string;
 }
 interface IState {
   tableDataA: TableDataRowA[];
@@ -551,7 +552,7 @@ class Result extends React.Component<IProps, IState> {
 
   render() {
     return (
-      <div className="workbench-result">
+      <div className={`workbench-result ${this.props.className}`}>
         <div className="workbench-result-toolbar">
           <div className="workbench-result-btns">
             <Button.Group>
@@ -570,7 +571,7 @@ class Result extends React.Component<IProps, IState> {
           {/* <div className="workbench-result-config"></div> */}
         </div>
         <div className="workbench-result-tables">
-          <Tabs defaultActiveKey="1" tabBarStyle={{ padding: '0 10px' }} style={{ height: '100%' }}>
+          <Tabs defaultActiveKey="1" tabBarStyle={{ padding: '0 10px', marginBottom: '0' }} style={{ height: '100%' }}>
             {/* 培训表 */}
             <Tabs.TabPane key="1" tab="培训-技能表">
               <Table

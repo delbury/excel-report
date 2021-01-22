@@ -9,18 +9,20 @@ import { sheetFieldMap } from './sheet-fields-map';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import { actions } from '@/redux/actions/global';
+import { resolveScoreExcelFile, separateScoreDateTimes } from './resolve-excel';
+import UnmatchedModal from './unmatched-modal';
 import {
-  resolveScoreExcelFile,
+  DataCachesType,
+  UnmatchedCachesType,
+  ResolvedDataTypeMap,
   ResolvedDataType,
-  separateScoreDateTimes,
-  SeparateScoreDataTimesReturnType,
-  EnumColumns,
-} from './resolve-excel';
+} from './index-types';
+import { EnumTimes, EnumColumns } from './enums';
 
 type FilteredDataMap = Map<string, TableDataRowNameList[]>;
-enum EnumTimes { First, Second };
 
 interface IProps {
+  className?: string;
   outerData: TableDataRow[];
   outerColumns: TableColumns;
   currentSheetName: string;
@@ -33,7 +35,10 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   // const [filteredDataMap, setFilteredDataMap] = useState<FilteredDataMap>(new Map());
   const [fileList, setFileList] = useState<UploadFile[]>([]); // 成绩文件列表
   const [timesScores, setTimesScores] = useState<EnumTimes>(EnumTimes.First); // 第几次提交
-  const [separatedData, setSeparatedData] = useState<SeparateScoreDataTimesReturnType | null>(null);
+  const [separatedData, setSeparatedData] = useState<ResolvedDataTypeMap | null>(null);
+  const [unmatchedDataCount, setUnmatchedDataCount] = useState<number>(0); // 是否有未匹配的成绩
+  const [dataCahces, setDataCaches] = useState<DataCachesType>({ first: [], second: [] });
+  const [unmatchedCaches, setUnmatchedCaches] = useState<UnmatchedCachesType>({ first: [], second: [] });
 
   let idCount: number = Date.now();
   /** 
@@ -94,7 +99,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
 
   };
 
-  // 统计成绩
+  // 确认导入
   const resolveScoreExcelFiles = async () => {
     // if (!tableDataNameList.length) {
     //   return message.warning('请先生成名单！');
@@ -108,6 +113,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
     try {
       // 整合所有成绩
       const totalData: ResolvedDataType[] = [];
+      let idCount: number = Date.now();
       for (let item of fileList) {
         if (item.originFileObj) {
           const data = await resolveScoreExcelFile(item.originFileObj);
@@ -127,6 +133,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
         
         timesData.first.forEach(item => {
           const hash: string = item[EnumColumns.Name] + item[EnumColumns.Phone];
+          item.id = (idCount++).toString();
           if (map.has(hash)) {
             const row = map.get(hash);
             if (row) {
@@ -148,6 +155,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
         
         timesData.second.forEach(item => {
           const hash: string = item[EnumColumns.Name] + item[EnumColumns.Phone];
+          item.id = (idCount++).toString();
           if (map.has(hash)) {
             const row = map.get(hash);
             if (row) {
@@ -160,6 +168,16 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
         });
       }
 
+      setDataCaches({
+        first: firstData,
+        second: secondData,
+      });
+      setUnmatchedCaches({
+        first: unmatchedFirstData,
+        second: unmatchedSecondData,
+      });
+      
+      setUnmatchedDataCount(unmatchedFirstData.length + unmatchedSecondData.length);
       if (timesScores === EnumTimes.First) {
         setTableDataNameList(firstData);
       } else if(timesScores === EnumTimes.Second) {
@@ -174,7 +192,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   };
 
   return (
-    <div className="workbench-result">
+    <div className={`workbench-result ${props.className}`}>
       <div className="workbench-result-toolbar">
         <div className="workbench-result-btns">
           <Button.Group size="small">
@@ -212,8 +230,24 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
               value={timesScores}
               optionType="button"
               size="small"
-              onChange={(ev) => setTimesScores(ev.target.value)}
+              onChange={(ev) => {
+                setTimesScores(ev.target.value);
+                props.toggleLoading(true);
+                if (ev.target.value === EnumTimes.First ) {
+                  setTableDataNameList(dataCahces.first);
+                } else if(ev.target.value === EnumTimes.Second ) {
+                  setTableDataNameList(dataCahces.second);
+                }
+                setTimeout(() => props.toggleLoading(false), 0);
+              }}
             ></Radio.Group> : null
+          }
+          {
+            separatedData ?
+              <UnmatchedModal
+                unmatchedDataCount={unmatchedDataCount}
+                unmatchedData={unmatchedCaches}
+              ></UnmatchedModal> : ''
           }
         </div>
       </div>

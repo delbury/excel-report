@@ -373,25 +373,34 @@ class Workbench extends React.PureComponent<IProps, IState> {
                   value={this.state.currentAnalysisType}
                   optionType="button"
                   size="small"
-                  onChange={(ev) => this.setState({ currentAnalysisType: ev.target.value })}
+                  onChange={(ev) => {
+                    this.props.toggleLoading(true);
+                    setTimeout(() => {
+                      this.setState(
+                        { currentAnalysisType: ev.target.value },
+                        () => setTimeout(() => this.props.toggleLoading(false), 0)
+                      );
+                    });
+                  }}
                 ></Radio.Group>
               </div>
             </div>
         
             {/* <Analysis columns={this.state.tableColumns} columnsMap={headerMap} data={ this.state.tableData } /> */}
-            {
-              this.state.currentAnalysisType === AnalysisTypes.Train ?
-                <Result outerColumns={this.state.tableColumns} outerData={this.state.allTableData}></Result> : ''
-            }
-            {
-              this.state.currentAnalysisType === AnalysisTypes.Score ?
-                <ResultCrossTable
-                  outerColumns={this.state.tableColumns}
-                  outerData={this.state.allTableData}
-                  currentSheetName={this.state.currentSheet}
-                  getAllSheetData={this.createTableDataAll}
-                ></ResultCrossTable> : ''
-            }
+            <div className="workbench-preview-tabs">
+              <Result
+                className={'page ' + (this.state.currentAnalysisType === AnalysisTypes.Train ? '' : 'none')}
+                outerColumns={this.state.tableColumns}
+                outerData={this.state.allTableData}
+              ></Result>
+              <ResultCrossTable
+                className={'page ' + (this.state.currentAnalysisType === AnalysisTypes.Score ? '' : 'none')}
+                outerColumns={this.state.tableColumns}
+                outerData={this.state.allTableData}
+                currentSheetName={this.state.currentSheet}
+                getAllSheetData={this.createTableDataAll}
+              ></ResultCrossTable>
+            </div>
           </div>
           
         </Content>

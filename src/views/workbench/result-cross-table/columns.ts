@@ -1,5 +1,6 @@
 import { TableColumns } from '../index-types';
 import { TableDataRowNameList } from './columns-types';
+import { ResolvedDataType } from './index-types';
 
 export const columnsNameList: TableColumns<TableDataRowNameList> = [
   {
@@ -8,7 +9,7 @@ export const columnsNameList: TableColumns<TableDataRowNameList> = [
     key: '_order',
     dataIndex: '_order',
     ellipsis: true,
-    width: 40,
+    width: 60,
     render: (text, record, index) => `${ index + 1 }`,
   },
   {
@@ -58,5 +59,89 @@ export const columnsNameList: TableColumns<TableDataRowNameList> = [
     dataIndex: 'result',
     ellipsis: true,
     width: 100,
+  },
+];
+
+export const columnsResolvedData: TableColumns<ResolvedDataType> = [
+  {
+    title: '序号',
+    titleName: '序号',
+    key: '_order',
+    dataIndex: '_order',
+    ellipsis: true,
+    width: 50,
+    render: (text, record, index) => `${ index + 1 }`,
+  },
+  {
+    title: '姓名',
+    titleName: '姓名',
+    key: 'B',
+    dataIndex: 'B',
+    ellipsis: true,
+    width: 80,
+  },
+  {
+    title: '手机号码',
+    titleName: '手机号码',
+    key: 'C',
+    dataIndex: 'C',
+    ellipsis: true,
+    width: 120,
+  },
+  {
+    title: '得分',
+    titleName: '得分',
+    key: 'D',
+    dataIndex: 'D',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '是否通过',
+    titleName: '是否通过',
+    key: 'E',
+    dataIndex: 'E',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '交卷时间',
+    titleName: '交卷时间',
+    key: 'F',
+    dataIndex: 'F',
+    ellipsis: true,
+    width: 160,
+  },
+  {
+    title: '考试用时',
+    titleName: '考试用时',
+    key: 'G',
+    dataIndex: 'G',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '员工编码',
+    titleName: '员工编码',
+    key: 'H',
+    dataIndex: 'H',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '所属专业',
+    titleName: '所属专业',
+    key: 'I',
+    dataIndex: 'I',
+    ellipsis: true,
+    width: 120,
+  },
+  {
+    title: '所在单位',
+    titleName: '所在单位',
+    key: 'J',
+    dataIndex: 'J',
+    ellipsis: true,
+    width: 160,
   },
 ];

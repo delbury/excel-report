@@ -1,19 +1,8 @@
 import XLSX, { WorkBook, WorkSheet } from 'xlsx';
+import { ResolvedDataTypeMap, ResolvedDataType } from './index-types';
+import { EnumColumns } from './enums';
 
 const USELESS_LINES = 8; // 表头多余行
-// 列数据对应
-export enum EnumColumns {
-  Name = 'B', // 姓名
-  Phone = 'C', // 手机
-  Score = 'D', // 得分
-  Pass = 'E', // 是否通过
-  Time = 'F', // 交卷时间
-  Duration = 'G', // 考试用时
-  Code = 'H', // 员工编码
-}
-export interface ResolvedDataType {
-  [key: string]: EnumColumns;
-} 
 
 // 解析成绩 excel 文件
 export const resolveScoreExcelFile = (file: File | Blob): Promise<{}[]> => {
@@ -46,11 +35,7 @@ export const resolveScoreExcelFile = (file: File | Blob): Promise<{}[]> => {
 };
 
 // 过滤一次提交的成绩和二次提交的成绩
-export interface SeparateScoreDataTimesReturnType {
-  first: ResolvedDataType[];
-  second: ResolvedDataType[];
-}
-export const separateScoreDateTimes = (totalData: ResolvedDataType[]): SeparateScoreDataTimesReturnType => {
+export const separateScoreDateTimes = (totalData: ResolvedDataType[]): ResolvedDataTypeMap => {
   // 按时间排序，升序
   totalData.sort((a, b) => {
     if (a[EnumColumns.Time] > b[EnumColumns.Time]) {
