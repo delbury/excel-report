@@ -1,6 +1,12 @@
 import { ExternalParamsMap } from './columns-types';
 
 export const sheetFieldMap: Map<string, ExternalParamsMap> = new Map([
+  ['车间', {
+    unitName: 'A',
+    name: 'B',
+    phone: 'C',
+    station: 'D',
+  }],
   ['十二局', {
     unitName: 'C',
     name: 'D',

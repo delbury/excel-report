@@ -15,5 +15,6 @@ export interface TableDataRowBasisNameList {
   phone: string;
   score?: number;
   result?: string;
+  isOutsource: boolean; // 是否是委外单位
 };
 export interface TableDataRowNameList extends TableDataRowBasisNameList, TableDataRow { };

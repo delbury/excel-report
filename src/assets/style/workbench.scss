@@ -45,6 +45,13 @@ $border-base: 1px solid rgb(240, 242, 245);
         right: 0;
         z-index: 10;
       }
+
+      // 可 resize
+      // .ant-table-body {
+      //   max-height: unset !important;
+      //   height: 150px;
+      //   resize: vertical;
+      // }
     }
 
     &-tabs {
@@ -177,8 +184,10 @@ $border-base: 1px solid rgb(240, 242, 245);
     &-btns {
       display: flex;
       align-items: center;
-      margin-right: 50px;
+      // margin-right: 50px;
+      padding-right: 210px;
       flex-shrink: 0;
+      flex-grow: 1;
 
       >*:not(:last-child) {
         margin-right: 10px;
@@ -211,11 +220,33 @@ $border-base: 1px solid rgb(240, 242, 245);
         display: none !important;
       }
     }
+
+    &-uploads-box {
+      width: 300px;
+
+      .upload {
+        display: flex;
+        align-items: center;
+
+        .ant-upload-list {
+          margin-left: 10px;
+          overflow: hidden;
+
+          .ant-upload-list-item {
+            margin: 0;
+          }
+        }
+      }
+
+      >*:not(:last-child) {
+        margin-bottom: 10px;
+      }
+    }
   }
 
   // 覆盖 antd 样式
   .ant-badge-multiple-words {
-    padding: 0 6px;
+    padding: 0 3px;
   }
 }
 

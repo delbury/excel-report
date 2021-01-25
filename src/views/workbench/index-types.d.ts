@@ -14,3 +14,4 @@ export interface TableColumn<T = object> extends ColumnType<T>, AdditionalColumn
 export type TableColumns<T = object> = TableColumn<T>[];
 
 export type TableColumnsMap = Map<string, TableColumn>;
+export { ColumnsType, ColumnType };

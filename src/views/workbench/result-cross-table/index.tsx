@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { TableColumns, TableDataRow, TableColumnsMap } from '../index-types';
-import { Button, Tooltip, Table, Upload, Badge, message, Radio } from 'antd';
+import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../index-types';
+import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover } from 'antd';
 import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
-import { InfoCircleOutlined, UploadOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, UploadOutlined, DownloadOutlined, SelectOutlined } from '@ant-design/icons';
 import { TableDataRowNameList } from './columns-types';
 import { columnsNameList } from './columns';
 import { sheetFieldMap } from './sheet-fields-map';
@@ -11,6 +11,7 @@ import { Dispatch } from 'redux';
 import { actions } from '@/redux/actions/global';
 import { resolveScoreExcelFile, separateScoreDateTimes } from './resolve-excel';
 import UnmatchedModal from './unmatched-modal';
+import ChartsModal from './charts-modal';
 import {
   DataCachesType,
   UnmatchedCachesType,
@@ -18,7 +19,8 @@ import {
   ResolvedDataType,
 } from './index-types';
 import { EnumTimes, EnumColumns } from './enums';
-
+import { exportExcelFile, getTableDatasFromExcel } from '../tools';
+import DelVirtualTable from '@/components/del-virtual-table';
 // type FilteredDataMap = Map<string, TableDataRowNameList[]>;
 
 interface IProps {
@@ -26,7 +28,6 @@ interface IProps {
   outerData: TableDataRow[];
   outerColumns: TableColumns;
   currentSheetName: string;
-  getAllSheetData: () => Map<string, TableDataRow[]>;
   toggleLoading: (status?: boolean) => void;
 }
 
@@ -39,6 +40,8 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const [unmatchedDataCount, setUnmatchedDataCount] = useState<number>(0); // 是否有未匹配的成绩
   const [dataCahces, setDataCaches] = useState<DataCachesType>({ first: [], second: [] });
   const [unmatchedCaches, setUnmatchedCaches] = useState<UnmatchedCachesType>({ first: [], second: [] });
+  const [namesFileListA, setNamesFileListA] = useState<UploadFile[]>([]); // 车间花名册
+  const [namesFileListB, setNamesFileListB] = useState<UploadFile[]>([]); // 委外花名册
 
   let idCount: number = Date.now();
   /** 
@@ -66,29 +69,45 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
 
   // 生成全部名单
   const handleGenerateTotalNameList = () => {
+    if (!namesFileListA.length && !namesFileListB.length) {
+      return message.warning('请先选择车间和委外的花名册！');
+    }
+
     props.toggleLoading(true);
 
-    setTimeout(() => {
-      const dataMap = props.getAllSheetData();
-      // const tempFilteredDataMap: FilteredDataMap = new Map();
-      const list: TableDataRowNameList[] = [];
+    setTimeout(async () => {
+      const dataMapWorkshop = await getTableDatasFromExcel(namesFileListA[0]?.originFileObj);
+      const dataMapOutsource = await getTableDatasFromExcel(namesFileListB[0]?.originFileObj);
 
-      for (let [sheetName, data] of dataMap.entries()) {
-        const keyMap = sheetFieldMap.get(sheetName);
-        const tempArr: TableDataRowNameList[] = [];
-        // tempFilteredDataMap.set(sheetName, tempArr);
-        if (keyMap) {
-          data.forEach(item => {
-            const tempObj = {
-              id: (idCount++).toString(),
-              unitName: item[keyMap.unitName],
-              name: item[keyMap.name],
-              phone: item[keyMap.phone],
-              station: item[keyMap.station],
-            };
-            tempArr.push(tempObj);
-            list.push(tempObj);
-          });
+      if (!dataMapWorkshop.size && !dataMapOutsource.size) {
+        props.toggleLoading(false);
+        return;
+      }
+
+      // const tempFilteredDataMap: FilteredDataMap = new Map();
+      const dataMaps = [dataMapWorkshop, dataMapOutsource];
+      const list: TableDataRowNameList[] = [];
+      for (let itemIndex in dataMaps) {
+        const dataMap = dataMaps[itemIndex]; // 0：车间，1：委外
+
+        for (let [sheetName, data] of dataMap.entries()) {
+          const keyMap = sheetFieldMap.get(itemIndex === '0' ? '车间' : sheetName);
+          const tempArr: TableDataRowNameList[] = [];
+          // tempFilteredDataMap.set(sheetName, tempArr);
+          if (keyMap) {
+            data.forEach(item => {
+              const tempObj = {
+                id: (idCount++).toString(),
+                unitName: item[keyMap.unitName],
+                name: item[keyMap.name],
+                phone: item[keyMap.phone],
+                station: item[keyMap.station],
+                isOutsource: itemIndex === '1',
+              };
+              tempArr.push(tempObj);
+              list.push(tempObj);
+            });
+          }
         }
       }
       // setFilteredDataMap(tempFilteredDataMap);
@@ -101,9 +120,9 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
 
   // 确认导入
   const resolveScoreExcelFiles = async () => {
-    // if (!tableDataNameList.length) {
-    //   return message.warning('请先生成名单！');
-    // }
+    if (!tableDataNameList.length) {
+      return message.warning('请先生成名单！');
+    }
 
     if (!fileList.length) {
       return message.warning('请先导入成绩excel！');
@@ -200,16 +219,53 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       <div className="workbench-result-toolbar">
         <div className="workbench-result-btns">
           <Button.Group size="small">
-            <Button type="primary" onClick={() => handleGenerateTotalNameList()}>生成完整名单</Button>
-            {/* <Button onClick={() => handleGenerateNameList()}>生成单表名单</Button> */}
+            <Button type="primary" onClick={() => handleGenerateTotalNameList()}>生成名单</Button>
+
+            <Popover
+              title="选择花名册"
+              placement="bottomLeft"
+              trigger={['click']}
+              content={
+                <div className="workbench-result-uploads-box">
+                  {/* 车间花名册 */}
+                  <Upload
+                    accept=".xlsx, .xls"
+                    fileList={namesFileListA}
+                    beforeUpload={() => false}
+                    className="upload"
+                    onChange={ev => {
+                      const fileList: UploadFile[] = ev.fileList.slice(-1);
+                      setNamesFileListA(fileList);
+                    }}
+                  >
+                    <Button size="small" icon={<UploadOutlined />}>选择车间花名册</Button>
+                  </Upload>
+
+                  {/* 委外花名册 */}
+                  <Upload
+                    accept=".xlsx, .xls"
+                    fileList={namesFileListB}
+                    beforeUpload={() => false}
+                    className="upload"
+                    onChange={ev => {
+                      const fileList: UploadFile[] = ev.fileList.slice(-1);
+                      setNamesFileListB(fileList);
+                    }}
+                  >
+                    <Button size="small" icon={<UploadOutlined />}>选择委外花名册</Button>
+                  </Upload>
+                </div>
+              }>
+              <Button icon={<SelectOutlined />}>选择</Button>
+            </Popover>
           </Button.Group>
 
-          <Tooltip
+          {/* <Tooltip
             title="需先导入选择花名册"
             placement="top"
           >
             <InfoCircleOutlined />
-          </Tooltip>
+          </Tooltip> */}
 
           <Upload
             accept=".xlsx, .xls"
@@ -220,7 +276,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
             className={`workbench-result-upload${fileList.length ? '' : ' is-empty'}`}
           >
             <Badge count={fileList.length} size="small" offset={[-8, -1]}>
-              <Button size="small" icon={<UploadOutlined />}>导入成绩excel</Button>
+              <Button size="small" icon={<UploadOutlined />}>选择成绩文件</Button>
             </Badge>
           </Upload>
 
@@ -252,6 +308,27 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                   unmatchedDataCount={unmatchedDataCount}
                   unmatchedData={unmatchedCaches}
                 ></UnmatchedModal>
+
+                <ChartsModal
+                  datas={dataCahces}
+                ></ChartsModal>
+
+                <Button
+                  size="small"
+                  icon={<DownloadOutlined />}
+                  onClick={() => exportExcelFile([
+                    {
+                      sheetName: '一次提交成绩单',
+                      columns: columnsNameList,
+                      data: dataCahces.first,
+                    },
+                    {
+                      sheetName: '二次提交成绩单',
+                      columns: columnsNameList,
+                      data: dataCahces.second,
+                    },
+                  ], '完整成绩单')}
+                >导出成绩</Button>
               </> : null
           }
         </div>

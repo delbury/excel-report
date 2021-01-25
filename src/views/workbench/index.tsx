@@ -1,6 +1,6 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router-dom';
-import { Layout, Upload, Button, Radio, Table, Tooltip } from 'antd';
+import { Layout, Upload, Button, Radio, Table, Tooltip, message } from 'antd';
 import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
 import { RadioChangeEvent } from 'antd/es/radio';
 import { UploadOutlined, InfoCircleOutlined } from '@ant-design/icons';
@@ -266,21 +266,6 @@ class Workbench extends React.PureComponent<IProps, IState> {
     });
   }
 
-  //构造所有表的数据
-  createTableDataAll = () => {
-    const dataMap: Map<string, TableDataRow[]> = new Map();
-
-    if (this.workbook) {
-      this.state.sheetNames.forEach(name => {
-        if (this.workbook) {
-          dataMap.set(name, this.createTableData(name, this.workbook.Sheets[name]).body);
-        }
-      });
-      
-    }
-
-    return dataMap;
-  }
 
   componentDidMount() {
     // 初始化选择表区域滚动功能
@@ -398,7 +383,6 @@ class Workbench extends React.PureComponent<IProps, IState> {
                 outerColumns={this.state.tableColumns}
                 outerData={this.state.allTableData}
                 currentSheetName={this.state.currentSheet}
-                getAllSheetData={this.createTableDataAll}
               ></ResultCrossTable>
             </div>
           </div>

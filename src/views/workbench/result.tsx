@@ -1,8 +1,9 @@
 import React from 'react';
 import { TableColumns, TableDataRow } from './index-types';
 import { Table, Button, Select, Tabs, List } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 import { columnsA, getColumnsB, getColumnsC, columnsD } from './result-columns';
-import XLSX, { Sheet, ColInfo, WorkBook } from 'xlsx';
+import XLSX, { ColInfo, WorkBook, WorkSheet } from 'xlsx';
 import {
   TableDataRowA,
   TableDataRowB,
@@ -15,6 +16,7 @@ import {
   TableDataRowKinds,
 } from './result-table-types';
 import ResultCharts from './chart';
+import { generateExcelSheet, exportExcelFile } from './tools';
 
 
 type ToolbarConfigItemKeyType = 'month' | 'project' | 'role' |
@@ -495,13 +497,13 @@ class Result extends React.Component<IProps, IState> {
   // 导出
   handleExportPart1 = (workbook?: WorkBook) => {
     const wb = workbook ?? XLSX.utils.book_new();
-    const sheetA = this.getExportSheet(this.state.tableColumnsA, this.state.tableDataA);
+    const sheetA = generateExcelSheet(this.state.tableColumnsA, this.state.tableDataA);
     XLSX.utils.book_append_sheet(wb, sheetA, '核心技能情况表');
 
-    const sheetB = this.getExportSheet(this.state.tableColumnsB, this.state.tableDataB);
+    const sheetB = generateExcelSheet(this.state.tableColumnsB, this.state.tableDataB);
     XLSX.utils.book_append_sheet(wb, sheetB, '培训基本情况表');
 
-    const sheetC = this.getExportSheet(this.state.tableColumnsC, this.state.tableDataC);
+    const sheetC = generateExcelSheet(this.state.tableColumnsC, this.state.tableDataC);
     XLSX.utils.book_append_sheet(wb, sheetC, '培训师情况表');
 
     !workbook && XLSX.writeFile(wb, '培训情况分析结果.xlsx');
@@ -510,7 +512,7 @@ class Result extends React.Component<IProps, IState> {
   // 导出
   handleExportPart2(workbook?: WorkBook) {
     const wb = workbook ?? XLSX.utils.book_new();
-    const sheetD = this.getExportSheet(this.state.tableColumnsD, this.state.tableDataD);
+    const sheetD = generateExcelSheet(this.state.tableColumnsD, this.state.tableDataD);
     XLSX.utils.book_append_sheet(wb, sheetD, '必知必会评估表');
 
     !workbook && XLSX.writeFile(wb, '必知必会分析结果.xlsx');
@@ -522,32 +524,6 @@ class Result extends React.Component<IProps, IState> {
     this.handleExportPart1(wb);
     this.handleExportPart2(wb);
     XLSX.writeFile(wb, '培训情况、必知必会分析结果.xlsx');
-  }
-  
-  // 根据 columns 过滤生成导出的 excel 表格列
-  getExportSheet(columns: TableColumns<any>, data: TableDataRow[]): Sheet {
-    const map: Map<string, string> = new Map();
-    const res: any = [];
-    const colInfos: ColInfo[] = [];
-    columns.forEach((item, index) => {
-      const title: string = item.titleName.toString();
-      map.set((item.key ?? '').toString(), title);
-      colInfos.push({
-        wpx: Number(item.width ?? 100),
-      });
-    });
-
-    data.forEach(item => {
-      const obj: any = {};
-      for (let [key, val] of map.entries()) {
-        obj[val] = item[key];
-      }
-      res.push(obj);
-    });
-
-    const sheet = XLSX.utils.json_to_sheet(res);
-    sheet['!cols'] = colInfos;
-    return sheet;
   }
 
   render() {
@@ -565,7 +541,7 @@ class Result extends React.Component<IProps, IState> {
               <Button size="small" onClick={ () => this.handleExportPart2() }>导出</Button>
             </Button.Group>
 
-            <Button size="small" onClick={ () => this.handleExportAll() }>整合导出</Button>
+            <Button size="small" icon={<DownloadOutlined />} onClick={ () => this.handleExportAll() }>整合导出</Button>
           </div>
 
           {/* <div className="workbench-result-config"></div> */}

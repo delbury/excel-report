@@ -18,7 +18,7 @@ export const columnsNameList: TableColumns<TableDataRowNameList> = [
     key: 'unitName',
     dataIndex: 'unitName',
     ellipsis: true,
-    width: 180,
+    width: 200,
   },
   {
     title: '姓名',
