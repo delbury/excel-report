@@ -6,7 +6,7 @@ module.exports = {
     commonjs: true,
     es6: true,
   },
-  // parser: "babel-eslint",
+  // parser: 'babel-eslint',
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaFeatures: {
@@ -16,11 +16,16 @@ module.exports = {
     ecmaVersion: 7,
     sourceType: 'module',
   },
+  plugins: [
+    '@typescript-eslint/indent',
+  ],
   rules: {
     'no-unused-vars': 'off',
     'semi': 'warn',
     'no-var': 'warn',
     'arrow-spacing': 'warn',
-    'indent': ["warn", 2, { SwitchCase: 1 }],
+    'indent': ['warn', 2, { SwitchCase: 1 }],
+    // 'indent': 'off',
+    '@typescript-eslint/indent': ['warn', 2, { SwitchCase: 1 }],
   }
 };

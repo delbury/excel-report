@@ -14,7 +14,6 @@ const ChartModal: React.FC<IProps> = function (props: IProps) {
   // 计算数据
   useMemo(() => {
     // 计算参考率
-    
 
   }, [props.datas]);
 
