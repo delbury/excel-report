@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Badge, Button, Table, Radio } from 'antd';
-import { UnmatchedCachesType, ResolvedDataType } from './index-types';
+import {
+  UnmatchedCachesType,
+  ResolvedDataType,
+  DataCachesType,
+  TableDataRowNameList
+} from './index-types';
 import { TableDataRow } from '../index-types';
-import { columnsResolvedData } from './columns';
+import { getColumnsResolvedData } from './columns';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import { actions } from '@/redux/actions/global';
-import { EnumTimes } from './enums';
+import { EnumTimes, EnumColumns } from './enums';
 import { exportExcelFile } from '../tools';
 
 interface IProps {
-  unmatchedDataCount: number;
+  matchecData: DataCachesType;
+  unmatchedDataCount: [number, number];
   unmatchedData: UnmatchedCachesType;
   toggleLoading: (status?: boolean) => void;
 }
@@ -31,6 +37,28 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
   // 打开弹框
   const open = () => setShowModal(true);
 
+  // 表头
+  const columnsResolvedData = getColumnsResolvedData((record, index) => {
+    // 行点击回调，搜索可能匹配项
+    if (!record) return;
+
+    let matchedList: TableDataRowNameList[] = [];
+    if (timesScores === EnumTimes.First) {
+      matchedList = props.matchecData.first;
+    } else if (timesScores === EnumTimes.Second) {
+      matchedList = props.matchecData.second;
+    }
+
+    // 过滤可能匹配项
+    const name: string = record[EnumColumns.Name];
+    const phone: string = record[EnumColumns.Phone];
+    const searchedList = matchedList.filter(item => {
+      return item.phone === phone || item.name.includes(name);
+    });
+
+    console.log(searchedList);
+  });
+
   // 导出
   const handleExportExcel = () => {
     exportExcelFile([
@@ -49,7 +77,7 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
 
   return (
     <>
-      <Badge count={props.unmatchedDataCount} size="small" offset={[-8, -1]}>
+      <Badge count={props.unmatchedDataCount[0] + props.unmatchedDataCount[1]} size="small" offset={[-8, -1]}>
         <Button size="small" onClick={open}>查看未匹配成绩</Button>
       </Badge>
       <Modal
@@ -60,15 +88,16 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
         cancelText="关闭"
         okText="确定"
         width="80vw"
+        bodyStyle={{ minHeight: '400px' }}
       >  
         <div className="toolbar">
           <Button size="small" type="primary" onClick={() => handleExportExcel()}>导出</Button>
 
           <Radio.Group
-            options={[
-              { label: '一次提交', value: EnumTimes.First },
-              { label: '二次提交', value: EnumTimes.Second },
-            ]}
+            // options={[
+            //   { label: '一次提交', value: EnumTimes.First },
+            //   { label: '二次提交', value: EnumTimes.Second },
+            // ]}
             value={timesScores}
             optionType="button"
             size="small"
@@ -82,7 +111,14 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
               }
               setTimeout(() => props.toggleLoading(false), 0);
             }}
-          ></Radio.Group>
+          >
+            <Badge count={props.unmatchedDataCount[0]} size="small" offset={[-8, -1]}>
+              <Radio.Button value={EnumTimes.First}>一次提交</Radio.Button>
+            </Badge>
+            <Badge count={props.unmatchedDataCount[0]} size="small" offset={[-8, -1]}>
+              <Radio.Button value={EnumTimes.Second}>二次提交</Radio.Button>
+            </Badge>
+          </Radio.Group>
         </div>
 
         <div style={{ overflow: 'auto', maxHeight: '60vh', marginTop: '10px' }}>

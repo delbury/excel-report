@@ -4,7 +4,7 @@ import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover } from '
 import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
 import { InfoCircleOutlined, UploadOutlined, DownloadOutlined, SelectOutlined } from '@ant-design/icons';
 import { TableDataRowNameList } from './columns-types';
-import { columnsNameList } from './columns';
+import { getColumnsNameList } from './columns';
 import { sheetFieldMap } from './sheet-fields-map';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
@@ -39,7 +39,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const [fileList, setFileList] = useState<UploadFile[]>([]); // 成绩文件列表
   const [timesScores, setTimesScores] = useState<EnumTimes>(EnumTimes.First); // 第几次提交
   const [separatedData, setSeparatedData] = useState<ResolvedDataTypeMap | null>(null);
-  const [unmatchedDataCount, setUnmatchedDataCount] = useState<number>(0); // 是否有未匹配的成绩
+  const [unmatchedDataCount, setUnmatchedDataCount] = useState<[number, number]>([0, 0]); // 是否有未匹配的成绩
   const [dataCahces, setDataCaches] = useState<DataCachesType>({ first: [], second: [] });
   const [unmatchedCaches, setUnmatchedCaches] = useState<UnmatchedCachesType>({ first: [], second: [] });
   const [namesFileListA, setNamesFileListA] = useState<UploadFile[]>([]); // 车间花名册
@@ -219,7 +219,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       });
       
       // 设置未匹配条数角标数字
-      setUnmatchedDataCount(unmatchedFirstData.length + unmatchedSecondData.length);
+      setUnmatchedDataCount([unmatchedFirstData.length, unmatchedSecondData.length]);
       if (timesScores === EnumTimes.First) {
         setTableDataNameList(firstData);
       } else if(timesScores === EnumTimes.Second) {
@@ -232,6 +232,13 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       props.toggleLoading(false);
     }
   };
+
+  // 生成表头
+  const columnsNameList = getColumnsNameList((record, index) => {
+    if (!record) return;
+
+    console.log(record);
+  });
 
   return (
     <div className={`workbench-result ${props.className}`}>
@@ -324,6 +331,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                 ></Radio.Group>
 
                 <UnmatchedModal
+                  matchecData={dataCahces}
                   unmatchedDataCount={unmatchedDataCount}
                   unmatchedData={unmatchedCaches}
                 ></UnmatchedModal>
