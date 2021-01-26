@@ -6,11 +6,14 @@
 }
 
 .modal-charts-container {
-  height: 550px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  height: 700px;
   width: 100%;
-  text-align: center;
+  overflow: auto;
 }
 
-.chart {
+// .chart {
 
-}
+// }

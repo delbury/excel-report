@@ -18,10 +18,12 @@ import {
 import ResultCharts from './chart';
 import { generateExcelSheet, exportExcelFile } from './tools';
 
-
+/* eslint-disable @typescript-eslint/indent */
 type ToolbarConfigItemKeyType = 'month' | 'project' | 'role' |
   'manage' | 'product' | 'hours' | 'totalPersonCount' |
-  'theoryHours' | 'practiceHours' | 'unitName'
+  'theoryHours' | 'practiceHours' | 'unitName'; 
+/* eslint-enable */
+
 interface ToolbarConfigItem {
   label: string;
   key: ToolbarConfigItemKeyType;

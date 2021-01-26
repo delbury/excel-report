@@ -1,18 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { TableDataRow, TableColumns } from './index-types';
 import style from './style/chart.module.scss';
-
-import { EChartsFullOption } from 'echarts/lib/option';
-import echarts from 'echarts/lib/echarts';
-import 'echarts/lib/chart/line';
-import 'echarts/lib/component/title';
-import 'echarts/lib/component/legend';
-import 'echarts/lib/component/tooltip';
-import 'echarts/lib/component/markLine';
-// import 'echarts/lib/component/grid'; // 5.0.1 修复，需要添加此项
-import 'echarts/lib/coord/cartesian/Grid'; // 5.0.1 修复，移除此项
-import 'echarts/lib/coord/cartesian/Axis2D'; // 5.0.1 修复，移除此项
-
+import { echarts, ECOption } from '@/lib/echarts';
 
 interface IProps {
   columns: TableColumns<any>;
@@ -73,7 +62,7 @@ const ResultCharts: React.FC<IProps> = function (props: IProps) {
       }
     }] : [];
 
-    const option: EChartsFullOption = {
+    const option: ECOption = {
       title: {
         text: props.title ?? '表',
         textAlign: 'center',
@@ -86,6 +75,7 @@ const ResultCharts: React.FC<IProps> = function (props: IProps) {
         }
       },
       grid: {
+        top: 80,
         bottom: 30,
       },
       // tooltip: {
@@ -103,7 +93,15 @@ const ResultCharts: React.FC<IProps> = function (props: IProps) {
         source: props.data,
       },
       series: [
-        ...Array(props.dimensions.length - 1).fill({ type: 'line' }),
+        ...Array(props.dimensions.length - 1).fill({
+          type: 'line',
+          label: {
+            show: true,
+            position: 'top',
+            formatter: (params: { value: any; seriesName: string; }) =>
+              params.value[params.seriesName] ? (+params.value[params.seriesName]).toFixed(2) : '',
+          }
+        }),
         ...markLine,
       ],
     };

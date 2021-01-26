@@ -96,9 +96,16 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
           // tempFilteredDataMap.set(sheetName, tempArr);
           if (keyMap) {
             data.forEach(item => {
+              let unitName = '';
+              if (itemIndex === '0') {
+                const arr = item[keyMap.unitName].split('/');
+                unitName = arr[arr.length - 1];
+              } else {
+                unitName = item[keyMap.unitName];
+              }
               const tempObj = {
                 id: (idCount++).toString(),
-                unitName: item[keyMap.unitName],
+                unitName,
                 name: item[keyMap.name],
                 phone: item[keyMap.phone],
                 station: item[keyMap.station],

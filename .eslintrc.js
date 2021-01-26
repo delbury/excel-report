@@ -17,15 +17,21 @@ module.exports = {
     sourceType: 'module',
   },
   plugins: [
-    '@typescript-eslint/indent',
+    '@typescript-eslint',
   ],
   rules: {
     'no-unused-vars': 'off',
     'semi': 'warn',
     'no-var': 'warn',
     'arrow-spacing': 'warn',
-    'indent': ['warn', 2, { SwitchCase: 1 }],
-    // 'indent': 'off',
-    '@typescript-eslint/indent': ['warn', 2, { SwitchCase: 1 }],
+    // 'indent': ['warn', 2, { SwitchCase: 1 }],
+    'indent': 'off',
+    '@typescript-eslint/indent': ['warn', 2, {
+      SwitchCase: 1,
+      // MemberExpression: 1,
+      // VariableDeclarator: 2,
+      // flatTernaryExpressions: true,
+      // ignoredNodes: [],
+    }],
   }
 };

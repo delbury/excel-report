@@ -278,7 +278,7 @@ class Workbench extends React.PureComponent<IProps, IState> {
       });
     }
 
-    this.test(TEST_FILE_URL);
+    // this.test(TEST_FILE_URL);
   }
 
   componentDidUpdate(prevProps: IProps, prevState: IState) {
