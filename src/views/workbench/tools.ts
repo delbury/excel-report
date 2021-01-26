@@ -1,4 +1,5 @@
 import { TableColumnsMap, TableData, TableColumns, TableDataRow, TableColumn } from './index-types';
+import { ResolvedDataType } from './result-cross-table/index-types';
 import { Row } from './analysis';
 import { ReactInstance } from 'react';
 import XLSX, { WorkBook, WorkSheet, ColInfo } from 'xlsx';

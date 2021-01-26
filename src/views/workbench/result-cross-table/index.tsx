@@ -23,6 +23,8 @@ import { exportExcelFile, getTableDatasFromExcel } from '../tools';
 import DelVirtualTable from '@/components/del-virtual-table';
 // type FilteredDataMap = Map<string, TableDataRowNameList[]>;
 
+const ONLY_MATCH_PHONE: boolean = true;
+  
 interface IProps {
   className?: string;
   outerData: TableDataRow[];
@@ -155,10 +157,15 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       const unmatchedFirstData: ResolvedDataType[] = []; // 在名单内未匹配到的分数
       const firstData: TableDataRowNameList[] = JSON.parse(JSON.stringify(tableDataNameList));
       if (timesData.first) {
-        firstData.forEach(item => map.set(item.name + item.phone, item)); // map 化，优化处理速度
+        firstData.forEach(item => map.set(
+          ONLY_MATCH_PHONE ? item.phone : item.name + item.phone,
+          item
+        )); // map 化，优化处理速度
         
         timesData.first.forEach(item => {
-          const hash: string = item[EnumColumns.Name] + item[EnumColumns.Phone];
+          const hash: string = ONLY_MATCH_PHONE ?
+            item[EnumColumns.Phone] : item[EnumColumns.Name] + item[EnumColumns.Phone]; // 匹配条件
+
           item.id = (idCount++).toString();
           if (map.has(hash)) {
             const row = map.get(hash);
@@ -177,10 +184,15 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       const unmatchedSecondData: ResolvedDataType[] = []; // 在名单内未匹配到的分数
       const secondData: TableDataRowNameList[] = JSON.parse(JSON.stringify(tableDataNameList));
       if (timesData.second) {
-        secondData.forEach(item => map.set(item.name + item.phone, item)); // map 化，优化处理速度
+        secondData.forEach(item => map.set(
+          ONLY_MATCH_PHONE ? item.phone : item.name + item.phone,
+          item,
+        )); // map 化，优化处理速度
         
         timesData.second.forEach(item => {
-          const hash: string = item[EnumColumns.Name] + item[EnumColumns.Phone];
+          const hash: string = ONLY_MATCH_PHONE ?
+            item[EnumColumns.Phone] : item[EnumColumns.Name] + item[EnumColumns.Phone]; // 匹配条件
+          
           item.id = (idCount++).toString();
           if (map.has(hash)) {
             const row = map.get(hash);

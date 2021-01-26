@@ -1,5 +1,6 @@
 import { TableDataRowNameList } from './columns-types';
 import { EnumColumns } from './resolve-excel';
+// import { TableDataRow } from '../index-types';
 
 export interface ResolvedDataType {
   id?: string;

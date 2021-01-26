@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Badge, Button, Table, Radio } from 'antd';
 import { UnmatchedCachesType, ResolvedDataType } from './index-types';
+import { TableDataRow } from '../index-types';
 import { columnsResolvedData } from './columns';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import { actions } from '@/redux/actions/global';
 import { EnumTimes } from './enums';
+import { exportExcelFile } from '../tools';
 
 interface IProps {
   unmatchedDataCount: number;
@@ -29,6 +31,22 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
   // 打开弹框
   const open = () => setShowModal(true);
 
+  // 导出
+  const handleExportExcel = () => {
+    exportExcelFile([
+      {
+        sheetName: '一次提交未匹配成绩',
+        data: props.unmatchedData.first as TableDataRow[],
+        columns: columnsResolvedData,
+      },
+      {
+        sheetName: '二次提交未匹配成绩',
+        data: props.unmatchedData.second as TableDataRow[],
+        columns: columnsResolvedData,
+      }
+    ], '未匹配成绩');
+  };
+
   return (
     <>
       <Badge count={props.unmatchedDataCount} size="small" offset={[-8, -1]}>
@@ -42,26 +60,30 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
         cancelText="关闭"
         okText="确定"
         width="80vw"
-      > 
-        <Radio.Group
-          options={[
-            { label: '一次提交', value: EnumTimes.First },
-            { label: '二次提交', value: EnumTimes.Second },
-          ]}
-          value={timesScores}
-          optionType="button"
-          size="small"
-          onChange={(ev) => {
-            props.toggleLoading(true);
-            setTimesScores(ev.target.value);
-            if (ev.target.value === EnumTimes.First ) {
-              setTableData(props.unmatchedData.first);
-            } else if(ev.target.value === EnumTimes.Second ) {
-              setTableData(props.unmatchedData.second);
-            }
-            setTimeout(() => props.toggleLoading(false), 0);
-          }}
-        ></Radio.Group>
+      >  
+        <div className="toolbar">
+          <Button size="small" type="primary" onClick={() => handleExportExcel()}>导出</Button>
+
+          <Radio.Group
+            options={[
+              { label: '一次提交', value: EnumTimes.First },
+              { label: '二次提交', value: EnumTimes.Second },
+            ]}
+            value={timesScores}
+            optionType="button"
+            size="small"
+            onChange={(ev) => {
+              props.toggleLoading(true);
+              setTimesScores(ev.target.value);
+              if (ev.target.value === EnumTimes.First ) {
+                setTableData(props.unmatchedData.first);
+              } else if(ev.target.value === EnumTimes.Second ) {
+                setTableData(props.unmatchedData.second);
+              }
+              setTimeout(() => props.toggleLoading(false), 0);
+            }}
+          ></Radio.Group>
+        </div>
 
         <div style={{ overflow: 'auto', maxHeight: '60vh', marginTop: '10px' }}>
           <Table

@@ -37,14 +37,26 @@ const createBaseOption = (
   
   const xAxisData: string[] = [];
   const seriesData: number[] = [];
+  const temp: { key: string, value: number }[] = [];
 
   for (let [key, item] of resolvedData) {
     if (!showTechnicalGroup && key === '技术组') continue;
       
-    xAxisData.push(key);
-    // @ts-ignore
-    seriesData.push(item[keyName] ?? 0);
+    // xAxisData.push(key);
+    // // @ts-ignore
+    // seriesData.push(item[keyName] ?? 0);
+    temp.push({
+      key,
+      // @ts-ignore
+      value: item[keyName] ?? 0,
+    });
   }
+
+  temp.sort((a, b) => b.value - a.value);
+  temp.forEach(item => {
+    xAxisData.push(item.key);
+    seriesData.push(item.value);
+  });
 
   return {
     title: {
@@ -55,6 +67,7 @@ const createBaseOption = (
     grid: {
       // top: 50,
       bottom: 150,
+      left: 120,
     },
     xAxis: {
       type: 'category',
