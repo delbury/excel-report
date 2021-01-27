@@ -17,5 +17,6 @@ export interface TableDataRowBasisNameList {
   result?: string;
   isOutsource: boolean; // 是否是委外单位
   isMatched?: boolean; // 是否已匹配
+  matchedId?: string; // 匹配项的 id
 };
 export interface TableDataRowNameList extends TableDataRowBasisNameList, TableDataRow { };

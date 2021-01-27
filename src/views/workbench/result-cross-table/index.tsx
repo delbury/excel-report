@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../index-types';
 import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input } from 'antd';
 import { UploadFile } from 'antd/lib/upload/interface';
@@ -33,14 +33,18 @@ interface IProps {
   toggleLoading: (status?: boolean) => void;
 }
 
+interface SeparatedDataType {
+  first: Map<string, ResolvedDataType>;
+  second: Map<string, ResolvedDataType>;
+}
+
 const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const [tableDataNameList, setTableDataNameList] = useState<TableDataRowNameList[]>([]); // 数据列表
   const [filteredNameList, setFilteredNameList] = useState<TableDataRowNameList[]>([]); // 搜索过滤后的数据列表
   // const [filteredDataMap, setFilteredDataMap] = useState<FilteredDataMap>(new Map());
   const [fileList, setFileList] = useState<UploadFile[]>([]); // 成绩文件列表
   const [timesScores, setTimesScores] = useState<EnumTimes>(EnumTimes.First); // 第几次提交
-  const [separatedData, setSeparatedData] = useState<ResolvedDataTypeMap | null>(null);
-  const [unmatchedDataCount, setUnmatchedDataCount] = useState<[number, number]>([0, 0]); // 是否有未匹配的成绩
+  const [separatedData, setSeparatedData] = useState<SeparatedDataType | null>(null);
   const [dataCahces, setDataCaches] = useState<DataCachesType>({ first: [], second: [] });
   const [unmatchedCaches, setUnmatchedCaches] = useState<UnmatchedCachesType>({ first: [], second: [] });
   const [namesFileListA, setNamesFileListA] = useState<UploadFile[]>([]); // 车间花名册
@@ -54,7 +58,13 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const [searchPhone, setSearchPhone] = useState<string>(); // 手机号码
   const [searchStation, setSearchStation] = useState<string>(); // 岗位
 
-  let idCount: number = Date.now();
+  let idCount: number = Date.now(); // 全局 id
+
+  // 未匹配的数量
+  const unmatchedDataCount = useMemo<[number, number]>(() => ([
+    unmatchedCaches.first.length,
+    unmatchedCaches.second.length,
+  ]), [unmatchedCaches]);
 
   // 生成全部名单
   const handleGenerateTotalNameList = () => {
@@ -110,7 +120,6 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
         }
       }
       // setFilteredDataMap(tempFilteredDataMap);
-      setTableDataNameList(list);
       handleFilterNameList(list);
       const selectOptions: { label: string; value: string }[] = [];
       for (let name of unitNameSet.keys()) {
@@ -144,61 +153,54 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
         }
       }
 
+      // 生成 id
+      totalData.forEach(item => item.id = (idCount++).toString());
+
       const timesData = separateScoreDateTimes(totalData);
-      setSeparatedData(timesData);
+      const firstTimeDataMap: Map<string, ResolvedDataType> = new Map();
+      const secondTimeDataMap: Map<string, ResolvedDataType> = new Map();
+      timesData.first.forEach(item => firstTimeDataMap.set(item.id as string, item));
+      timesData.second.forEach(item => secondTimeDataMap.set(item.id as string, item));
+      setSeparatedData({
+        first: firstTimeDataMap,
+        second: secondTimeDataMap,
+      });
 
       const map: Map<string, TableDataRowNameList> = new Map(); // hash 用于搜索优化
       // 计算1次提交成绩
       const unmatchedFirstData: ResolvedDataType[] = []; // 在名单内未匹配到的分数
+      const unmatchedSecondData: ResolvedDataType[] = []; // 在名单内未匹配到的分数
       const firstData: TableDataRowNameList[] = JSON.parse(JSON.stringify(tableDataNameList));
-      if (timesData.first) {
-        firstData.forEach(item => map.set(
+      const secondData: TableDataRowNameList[] = JSON.parse(JSON.stringify(tableDataNameList));
+
+      const unmatchedBothDatas = [unmatchedFirstData, unmatchedSecondData];
+      const bothData = [firstData, secondData];
+      const timesDatasArr = [timesData.first, timesData.second];
+
+      // 匹配一次和二次提交的成绩
+      for (let i = 0; i < timesDatasArr.length; i++) {
+        map.clear();
+
+        bothData[i].forEach(item => map.set(
           ONLY_MATCH_PHONE ? item.phone : item.name + item.phone,
           item
         )); // map 化，优化处理速度
-        
-        timesData.first.forEach(item => {
+
+        timesDatasArr[i].forEach(item => {
           const hash: string = ONLY_MATCH_PHONE ?
             item[EnumColumns.Phone] : item[EnumColumns.Name] + item[EnumColumns.Phone]; // 匹配条件
 
-          item.id = (idCount++).toString();
+          // item.id = (idCount++).toString();
           if (map.has(hash)) {
             const row = map.get(hash);
             if (row) {
               row.score = Number(item[EnumColumns.Score]);
               row.result = item[EnumColumns.Pass];
               row.isMatched = true;
+              row.matchedId = item.id;
             }
           } else {
-            unmatchedFirstData.push(item);
-          }
-        });
-      }
-
-      // 计算2次提交成绩
-      map.clear();
-      const unmatchedSecondData: ResolvedDataType[] = []; // 在名单内未匹配到的分数
-      const secondData: TableDataRowNameList[] = JSON.parse(JSON.stringify(tableDataNameList));
-      if (timesData.second) {
-        secondData.forEach(item => map.set(
-          ONLY_MATCH_PHONE ? item.phone : item.name + item.phone,
-          item,
-        )); // map 化，优化处理速度
-        
-        timesData.second.forEach(item => {
-          const hash: string = ONLY_MATCH_PHONE ?
-            item[EnumColumns.Phone] : item[EnumColumns.Name] + item[EnumColumns.Phone]; // 匹配条件
-          
-          item.id = (idCount++).toString();
-          if (map.has(hash)) {
-            const row = map.get(hash);
-            if (row) {
-              row.score = Number(item[EnumColumns.Score]);
-              row.result = item[EnumColumns.Pass];
-              row.isMatched = true;
-            }
-          } else {
-            unmatchedSecondData.push(item);
+            unmatchedBothDatas[i].push(item);
           }
         });
       }
@@ -216,12 +218,9 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       });
       
       // 设置未匹配条数角标数字
-      setUnmatchedDataCount([unmatchedFirstData.length, unmatchedSecondData.length]);
       if (timesScores === EnumTimes.First) {
-        setTableDataNameList(firstData);
         handleFilterNameList(firstData);
       } else if(timesScores === EnumTimes.Second) {
-        setTableDataNameList(secondData);
         handleFilterNameList(secondData);
       }
 
@@ -235,14 +234,38 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   // 生成表头
   // 操作按钮回调，取消匹配
   const columnsNameList = getColumnsNameList((record, index) => {
-    if (!record) return;
+    if (!record || !record.isMatched || !separatedData || index === undefined) return;
 
-    console.log(record);
+    const firstList = unmatchedCaches.first;
+    const secondList = unmatchedCaches.second;
+    const tableRow = filteredNameList[index];
+
+    console.log(record, index);
+
+    if (timesScores === EnumTimes.First) {
+      const row = separatedData.first.get(record.matchedId as string);
+      if (row) {
+        firstList.push(row);
+        setUnmatchedCaches({
+          first: firstList,
+          second: secondList,
+        });
+
+        tableRow.score = undefined;
+        tableRow.isMatched = false;
+        tableRow.matchedId = undefined;
+        tableRow.result = undefined;
+
+        handleFilterNameList([...tableDataNameList]);
+      }
+    }
   });
 
   // 搜索过滤
   const handleFilterNameList = (list?: TableDataRowNameList[]) => {
     props.toggleLoading(true);
+
+    list && setTableDataNameList(list);
 
     list = list ? list : tableDataNameList;
 
@@ -342,10 +365,8 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                     setTimesScores(ev.target.value);
                     props.toggleLoading(true);
                     if (ev.target.value === EnumTimes.First ) {
-                      setTableDataNameList(dataCahces.first);
                       handleFilterNameList(dataCahces.first);
                     } else if(ev.target.value === EnumTimes.Second ) {
-                      setTableDataNameList(dataCahces.second);
                       handleFilterNameList(dataCahces.second);
                     }
                     setTimeout(() => props.toggleLoading(false), 0);

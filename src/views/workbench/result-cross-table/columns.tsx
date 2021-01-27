@@ -4,7 +4,7 @@ import { ResolvedDataType } from './index-types';
 import { Button } from 'antd';
 import { LinkOutlined, DisconnectOutlined } from '@ant-design/icons';
 
-export const getColumnsNameList = (cb: (record?: ResolvedDataType, index?: number) => any): TableColumns<TableDataRowNameList> => {
+export const getColumnsNameList = (cb: (record?: TableDataRowNameList, index?: number) => any): TableColumns<TableDataRowNameList> => {
 
   return [
     {

@@ -89,6 +89,7 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
         okText="确定"
         width="80vw"
         bodyStyle={{ minHeight: '400px' }}
+        destroyOnClose
       >  
         <div className="toolbar">
           <Button size="small" type="primary" onClick={() => handleExportExcel()}>导出</Button>
