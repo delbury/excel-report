@@ -16,5 +16,6 @@ export interface TableDataRowBasisNameList {
   score?: number;
   result?: string;
   isOutsource: boolean; // 是否是委外单位
+  isMatched?: boolean; // 是否已匹配
 };
 export interface TableDataRowNameList extends TableDataRowBasisNameList, TableDataRow { };

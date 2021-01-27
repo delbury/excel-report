@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../index-types';
-import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover } from 'antd';
-import { RcFile, UploadProps, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
+import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input } from 'antd';
+import { UploadFile } from 'antd/lib/upload/interface';
 import { InfoCircleOutlined, UploadOutlined, DownloadOutlined, SelectOutlined } from '@ant-design/icons';
 import { TableDataRowNameList } from './columns-types';
 import { getColumnsNameList } from './columns';
@@ -35,6 +35,7 @@ interface IProps {
 
 const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const [tableDataNameList, setTableDataNameList] = useState<TableDataRowNameList[]>([]); // 数据列表
+  const [filteredNameList, setFilteredNameList] = useState<TableDataRowNameList[]>([]); // 搜索过滤后的数据列表
   // const [filteredDataMap, setFilteredDataMap] = useState<FilteredDataMap>(new Map());
   const [fileList, setFileList] = useState<UploadFile[]>([]); // 成绩文件列表
   const [timesScores, setTimesScores] = useState<EnumTimes>(EnumTimes.First); // 第几次提交
@@ -44,30 +45,16 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const [unmatchedCaches, setUnmatchedCaches] = useState<UnmatchedCachesType>({ first: [], second: [] });
   const [namesFileListA, setNamesFileListA] = useState<UploadFile[]>([]); // 车间花名册
   const [namesFileListB, setNamesFileListB] = useState<UploadFile[]>([]); // 委外花名册
+  const [unitNameSelectOptions, setUnitNameSelectOptions] = useState<{ label: string; value: string; }[]>([]); // 单位选择项
+
+  // 查询条件
+  const [searchIsMatched, setSearchIsMatched] = useState<string>(); // 是否匹配
+  const [searchUnitName, setSearchUnitName] = useState<string>(); // 选择单位
+  const [searchName, setSearchName] = useState<string>(); // 姓名
+  const [searchPhone, setSearchPhone] = useState<string>(); // 手机号码
+  const [searchStation, setSearchStation] = useState<string>(); // 岗位
 
   let idCount: number = Date.now();
-  /** 
-  // 生成名单，单张表
-  const handleGenerateNameList = () => {
-    props.toggleLoading(true);
-
-    setTimeout(() => {
-      const map = sheetFieldMap.get(props.currentSheetName);
-      if (!map) return;
-  
-      const list: TableDataRowNameList[] = props.outerData.map(item => ({
-        id: (idCount++).toString(),
-        unitName: item[map.unitName],
-        name: item[map.name],
-        phone: item[map.phone],
-        station: item[map.station],
-      }));
-  
-      setTableDataNameList(list);
-      props.toggleLoading(false);
-    }, 0);
-  };
-  */
 
   // 生成全部名单
   const handleGenerateTotalNameList = () => {
@@ -78,6 +65,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
     props.toggleLoading(true);
 
     setTimeout(async () => {
+      const unitNameSet: Set<string> = new Set(); // 保存所有不同的 unitName
       const dataMapWorkshop = await getTableDatasFromExcel(namesFileListA[0]?.originFileObj);
       const dataMapOutsource = await getTableDatasFromExcel(namesFileListB[0]?.originFileObj);
 
@@ -105,6 +93,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
               } else {
                 unitName = item[keyMap.unitName];
               }
+              unitNameSet.add(unitName);
               const tempObj = {
                 id: (idCount++).toString(),
                 unitName,
@@ -112,6 +101,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                 phone: item[keyMap.phone],
                 station: item[keyMap.station],
                 isOutsource: itemIndex === '1',
+                isMatched: false,
               };
               tempArr.push(tempObj);
               list.push(tempObj);
@@ -121,8 +111,13 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       }
       // setFilteredDataMap(tempFilteredDataMap);
       setTableDataNameList(list);
+      handleFilterNameList(list);
+      const selectOptions: { label: string; value: string }[] = [];
+      for (let name of unitNameSet.keys()) {
+        selectOptions.push({ label: name, value: name });
+      }
+      setUnitNameSelectOptions(selectOptions);
       props.toggleLoading(false);
-
     }, 0);
 
   };
@@ -172,6 +167,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
             if (row) {
               row.score = Number(item[EnumColumns.Score]);
               row.result = item[EnumColumns.Pass];
+              row.isMatched = true;
             }
           } else {
             unmatchedFirstData.push(item);
@@ -199,6 +195,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
             if (row) {
               row.score = Number(item[EnumColumns.Score]);
               row.result = item[EnumColumns.Pass];
+              row.isMatched = true;
             }
           } else {
             unmatchedSecondData.push(item);
@@ -222,8 +219,10 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       setUnmatchedDataCount([unmatchedFirstData.length, unmatchedSecondData.length]);
       if (timesScores === EnumTimes.First) {
         setTableDataNameList(firstData);
+        handleFilterNameList(firstData);
       } else if(timesScores === EnumTimes.Second) {
         setTableDataNameList(secondData);
+        handleFilterNameList(secondData);
       }
 
     } catch {
@@ -239,6 +238,26 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
 
     console.log(record);
   });
+
+  // 搜索过滤
+  const handleFilterNameList = (list?: TableDataRowNameList[]) => {
+    props.toggleLoading(true);
+
+    list = list ? list : tableDataNameList;
+
+    const matchFlag = Boolean(+(searchIsMatched ?? 0));
+    list = list.filter(item =>
+      (searchIsMatched === undefined || item.isMatched === matchFlag) &&
+      (searchUnitName === undefined || item.unitName === searchUnitName) &&
+      (!searchName || item.name.includes(searchName)) &&
+      (!searchPhone || item.phone.includes(searchPhone)) &&
+      (!searchStation || item.station.includes(searchStation))
+    );
+
+    setFilteredNameList(list);
+
+    setTimeout(() => props.toggleLoading(false), 0);
+  };
 
   return (
     <div className={`workbench-result ${props.className}`}>
@@ -323,8 +342,10 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                     props.toggleLoading(true);
                     if (ev.target.value === EnumTimes.First ) {
                       setTableDataNameList(dataCahces.first);
+                      handleFilterNameList(dataCahces.first);
                     } else if(ev.target.value === EnumTimes.Second ) {
                       setTableDataNameList(dataCahces.second);
+                      handleFilterNameList(dataCahces.second);
                     }
                     setTimeout(() => props.toggleLoading(false), 0);
                   }}
@@ -362,13 +383,84 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       </div>
 
       <div className="workbench-result-tables">
+        <div className="toolbar">
+          <Tooltip title="选择是否已匹配">
+            <Select
+              className="field-width-short"
+              size="small"
+              placeholder="是否匹配"
+              allowClear
+              options={[
+                { label: '已匹配', value: '1' },
+                { label: '未匹配', value: '0' },
+              ]}
+              value={searchIsMatched}
+              onChange={ev => setSearchIsMatched(ev)}
+            ></Select>
+          </Tooltip>
+          
+          <Tooltip title="选择单位">
+            <Select
+              className="field-width-long"
+              size="small" 
+              placeholder="选择单位" 
+              allowClear
+              options={unitNameSelectOptions}
+              value={searchUnitName}
+              onChange={ev => setSearchUnitName(ev)}
+            ></Select>
+          </Tooltip>
+
+          <Tooltip title="输入姓名">
+            <Input 
+              className="field-width" 
+              size="small"
+              placeholder="输入姓名" 
+              allowClear
+              value={searchName}
+              onChange={ev => setSearchName((ev.target.value ?? '').trim())}
+            ></Input>
+          </Tooltip>
+
+          <Tooltip title="输入手机号码">
+            <Input
+              className="field-width" 
+              size="small"
+              placeholder="输入手机号码"
+              allowClear
+              value={searchPhone}
+              onChange={ev => setSearchPhone((ev.target.value ?? '').trim())}
+            ></Input>
+          </Tooltip>
+
+          <Tooltip title="输入岗位">
+            <Input
+              className="field-width"
+              size="small"
+              placeholder="输入岗位"
+              allowClear
+              value={searchStation}
+              onChange={ev => setSearchStation((ev.target.value ?? '').trim())}
+            ></Input>
+          </Tooltip>
+
+          <Button type="primary" size="small" onClick={() => handleFilterNameList()}>搜索</Button>
+        </div>
         <Table
+          className="result-cross-table"
           columns={columnsNameList}
-          dataSource={tableDataNameList}
+          dataSource={filteredNameList}
           size="small"
           bordered
           rowKey="id"
-          pagination={false}
+          // pagination={false}
+          pagination={{
+            defaultPageSize: 20,
+            showTotal: (total) => (
+              <span className="mg-r-10">{ `当前条数 / 总条数：${filteredNameList.length} / ${tableDataNameList.length}` }</span>
+            ),
+            size: 'default',
+          }}
           scroll={{ x: 'max-content' }}
           sticky
         >

@@ -1,4 +1,5 @@
 $border-base: 1px solid rgb(240, 242, 245);
+$bg-color-deep: rgb(240, 242, 245);
 
 .workbench {
   padding: 20px;
@@ -158,15 +159,42 @@ $border-base: 1px solid rgb(240, 242, 245);
     overflow: hidden;
 
     &-tables {
+      display: flex;
+      flex-direction: column;
       flex: 1;
-      overflow: auto;
+      overflow: hidden;
+
+      .toolbar {
+        background-color: $bg-color-deep;
+        padding-bottom: 10px;
+      }
+
+      .result-cross-table {
+        flex: 1;
+        overflow: hidden;
+    
+        .ant-spin-nested-loading {
+          height: 100%;
+        }
+        .ant-spin-container {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+    
+          .ant-table {
+            flex: 1;
+            overflow: auto;
+            border-bottom: $border-base;
+          }
+        }
+      }
     }
 
     &-toolbar {
       padding: 10px 0;
       display: flex;
       justify-content: space-between;
-      background-color: rgb(240, 242, 245);
+      background-color: $bg-color-deep;
     }
 
     &-config {
@@ -248,6 +276,10 @@ $border-base: 1px solid rgb(240, 242, 245);
   .ant-badge-multiple-words {
     padding: 0 3px;
   }
+
+  .ant-table-pagination.ant-pagination {
+    padding-right: 10px;
+  }
 }
 
 .workbench-analysis-formula-tooltip {
@@ -263,5 +295,17 @@ $border-base: 1px solid rgb(240, 242, 245);
   >*:not(:last-child) {
     margin-right: 10px;
   }
+}
+
+.field-width {
+  width: 160px !important;
+}
+
+.field-width-short {
+  width: 100px !important;
+}
+
+.field-width-long {
+  width: 200px !important;
 }
 
