@@ -21,7 +21,7 @@ interface StatisticalParams {
 
 // 图表属性配置
 const commonEchartsOption: { width?: number, height?: number } = {
-  width: 600,
+  width: 700,
   height: 350,
 };
 
@@ -87,8 +87,10 @@ const createBaseOption = (
         label: {
           show: true,
           position: 'top',
+          fontSize: 10,
           formatter: (params) => params.value ? (+params.value).toFixed(2) : ''
-        }
+        },
+        barCategoryGap: '50%',
       },
     ],
   };

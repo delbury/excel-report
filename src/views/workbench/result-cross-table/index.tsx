@@ -233,6 +233,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   };
 
   // 生成表头
+  // 操作按钮回调，取消匹配
   const columnsNameList = getColumnsNameList((record, index) => {
     if (!record) return;
 
