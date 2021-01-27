@@ -112,10 +112,10 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
               setTimeout(() => props.toggleLoading(false), 0);
             }}
           >
-            <Badge count={props.unmatchedDataCount[0]} size="small" offset={[-8, -1]}>
+            <Badge count={props.unmatchedDataCount[0]} size="small" offset={[-8, -1]} style={{ zIndex: 5 }}>
               <Radio.Button value={EnumTimes.First}>一次提交</Radio.Button>
             </Badge>
-            <Badge count={props.unmatchedDataCount[0]} size="small" offset={[-8, -1]}>
+            <Badge count={props.unmatchedDataCount[1]} size="small" offset={[-8, -1]} style={{ zIndex: 5 }}>
               <Radio.Button value={EnumTimes.Second}>二次提交</Radio.Button>
             </Badge>
           </Radio.Group>
