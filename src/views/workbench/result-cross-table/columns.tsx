@@ -1,22 +1,41 @@
 import { TableColumns } from '../index-types';
 import { TableDataRowNameList, TableDataRowChart } from './columns-types';
 import { ResolvedDataType } from './index-types';
-import { Button } from 'antd';
-import { LinkOutlined, DisconnectOutlined } from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
+import { LinkOutlined, DisconnectOutlined, SelectOutlined } from '@ant-design/icons';
+import React from 'react';
 
-export const getColumnsNameList = (cb: (record?: TableDataRowNameList, index?: number) => any): TableColumns<TableDataRowNameList> => {
-
-  return [
+export const getColumnsNameList = (
+  type?: 'unmatch' | 'select',
+  cb?: (record?: TableDataRowNameList, index?: number) => any,
+): TableColumns<TableDataRowNameList> => {
+  // 是否有操作列
+  const operation: TableColumns<TableDataRowNameList> = type === 'unmatch' ? [
     {
-      title: '序号',
-      titleName: '序号',
-      key: '_order',
-      dataIndex: '_order',
+      title: '操作',
+      titleName: '操作',
+      key: '_operation',
+      dataIndex: '_operation',
       ellipsis: true,
-      width: 60,
+      width: 50,
       fixed: true,
-      render: (text, record, index) => `${ index + 1 }`,
+      render: (text, record, index) => {
+        return (
+          <Tooltip title="取消匹配">
+            <Button
+              ghost
+              type="primary"
+              size="small"
+              icon={<DisconnectOutlined />}
+              shape="circle"
+              onClick={() => cb && cb(record, index)}
+              disabled={!record.isMatched}
+            ></Button>
+          </Tooltip>
+        );
+      },
     },
+  ] : type === 'select' ? [
     {
       title: '操作',
       titleName: '操作',
@@ -31,14 +50,28 @@ export const getColumnsNameList = (cb: (record?: TableDataRowNameList, index?: n
             ghost
             type="primary"
             size="small"
-            icon={<DisconnectOutlined />}
+            icon={<SelectOutlined />}
             shape="circle"
-            onClick={() => cb(record, index)}
-            disabled={!record.score}
+            onClick={() => cb && cb(record, index)}
+            disabled={record.isMatched}
           ></Button>
         );
       },
     },
+  ] : [];
+
+  return [
+    {
+      title: '序号',
+      titleName: '序号',
+      key: '_order',
+      dataIndex: '_order',
+      ellipsis: true,
+      width: 60,
+      fixed: true,
+      render: (text, record, index) => `${ index + 1 }`,
+    },
+    ...operation,
     {
       title: '单位',
       titleName: '单位',
@@ -114,14 +147,16 @@ export const getColumnsResolvedData = (cb: (record?: ResolvedDataType, index?: n
       fixed: true,
       render: (text, record, index) => {
         return (
-          <Button
-            ghost
-            type="primary"
-            size="small"
-            icon={<LinkOutlined />}
-            shape="circle"
-            onClick={() => cb(record, index)}
-          ></Button>
+          <Tooltip title="手动匹配">
+            <Button
+              ghost
+              type="primary"
+              size="small"
+              icon={<LinkOutlined />}
+              shape="circle"
+              onClick={() => cb(record, index)}
+            ></Button>
+          </Tooltip>
         );
       },
     },

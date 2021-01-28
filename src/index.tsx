@@ -16,7 +16,10 @@ moment.locale('zh-cn');
 ReactDOM.render(
   // <React.StrictMode>
   <Provider store={store}>
-    <ConfigProvider locale={zhCN}>
+    <ConfigProvider
+      locale={zhCN}
+      // componentSize="small"
+    >
       <App />
     </ConfigProvider>
   </Provider>,

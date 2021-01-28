@@ -9,4 +9,6 @@ export enum EnumColumns {
   Time = 'F', // 交卷时间
   Duration = 'G', // 考试用时
   Code = 'H', // 员工编码
+  Major = 'I', // 所属专业
+  Unit = 'J', // 所在单位
 }

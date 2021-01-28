@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../index-types';
 import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input } from 'antd';
 import { UploadFile } from 'antd/lib/upload/interface';
-import { InfoCircleOutlined, UploadOutlined, DownloadOutlined, SelectOutlined } from '@ant-design/icons';
+import { UploadOutlined, DownloadOutlined, SelectOutlined } from '@ant-design/icons';
 import { TableDataRowNameList } from './columns-types';
 import { getColumnsNameList } from './columns';
 import { sheetFieldMap } from './sheet-fields-map';
@@ -45,7 +45,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const [fileList, setFileList] = useState<UploadFile[]>([]); // 成绩文件列表
   const [timesScores, setTimesScores] = useState<EnumTimes>(EnumTimes.First); // 第几次提交
   const [separatedData, setSeparatedData] = useState<SeparatedDataType | null>(null);
-  const [dataCahces, setDataCaches] = useState<DataCachesType>({ first: [], second: [] });
+  const [dataCaches, setDataCaches] = useState<DataCachesType>({ first: [], second: [] });
   const [unmatchedCaches, setUnmatchedCaches] = useState<UnmatchedCachesType>({ first: [], second: [] });
   const [namesFileListA, setNamesFileListA] = useState<UploadFile[]>([]); // 车间花名册
   const [namesFileListB, setNamesFileListB] = useState<UploadFile[]>([]); // 委外花名册
@@ -231,33 +231,69 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
     }
   };
 
+  // 手动匹配一行数据
+  const matchManually = (times: EnumTimes, matchingItem: ResolvedDataType, matchedItem: TableDataRowNameList) => {
+    matchedItem.isMatched = true;
+    matchedItem.matchedId = matchingItem.id;
+    matchedItem.result = matchingItem[EnumColumns.Pass];
+    matchedItem.score = matchingItem[EnumColumns.Score];
+
+    if (times === EnumTimes.First) {
+      const unmatchedList = unmatchedCaches.first;
+      const index = unmatchedList.findIndex(item => item.id === matchingItem.id);
+      unmatchedList.splice(index, 1);
+      setUnmatchedCaches({
+        first: [...unmatchedList],
+        second: unmatchedCaches.second,
+      });
+
+    } else if (times === EnumTimes.Second) {
+      const unmatchedList = unmatchedCaches.second;
+      const index = unmatchedList.findIndex(item => item.id === matchingItem.id);
+      unmatchedList.splice(index, 1);
+      setUnmatchedCaches({
+        first: unmatchedCaches.first,
+        second: [...unmatchedList],
+      });
+    }
+
+    handleFilterNameList();
+  };
+
   // 生成表头
-  // 操作按钮回调，取消匹配
-  const columnsNameList = getColumnsNameList((record, index) => {
+  const columnsNameList = getColumnsNameList('unmatch', (record, index) => {
+    // 操作按钮回调，点击取消匹配
+
     if (!record || !record.isMatched || !separatedData || index === undefined) return;
 
     const firstList = unmatchedCaches.first;
     const secondList = unmatchedCaches.second;
     const tableRow = filteredNameList[index];
+    let operationList: ResolvedDataType[] = [];
+    let operationRow: ResolvedDataType | undefined;
 
-    console.log(record, index);
 
     if (timesScores === EnumTimes.First) {
-      const row = separatedData.first.get(record.matchedId as string);
-      if (row) {
-        firstList.push(row);
-        setUnmatchedCaches({
-          first: firstList,
-          second: secondList,
-        });
+      operationRow = separatedData.first.get(record.matchedId as string);
+      operationList = firstList;
+    } else if (timesScores === EnumTimes.Second) {
+      operationRow = separatedData.second.get(record.matchedId as string);
+      operationList = secondList;
+    }
 
-        tableRow.score = undefined;
-        tableRow.isMatched = false;
-        tableRow.matchedId = undefined;
-        tableRow.result = undefined;
+    if (operationRow && operationList) {
+      operationList.push(operationRow);
+      setUnmatchedCaches({
+        first: firstList,
+        second: secondList,
+      });
 
-        handleFilterNameList([...tableDataNameList]);
-      }
+      tableRow.score = undefined;
+      tableRow.isMatched = false;
+      tableRow.matchedId = undefined;
+      tableRow.result = undefined;
+
+      handleFilterNameList([...tableDataNameList]);
     }
   });
 
@@ -365,22 +401,24 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                     setTimesScores(ev.target.value);
                     props.toggleLoading(true);
                     if (ev.target.value === EnumTimes.First ) {
-                      handleFilterNameList(dataCahces.first);
+                      handleFilterNameList(dataCaches.first);
                     } else if(ev.target.value === EnumTimes.Second ) {
-                      handleFilterNameList(dataCahces.second);
+                      handleFilterNameList(dataCaches.second);
                     }
                     setTimeout(() => props.toggleLoading(false), 0);
                   }}
                 ></Radio.Group>
 
                 <UnmatchedModal
-                  matchecData={dataCahces}
+                  matchedData={dataCaches}
                   unmatchedDataCount={unmatchedDataCount}
                   unmatchedData={unmatchedCaches}
+                  unitNameSelectOptions={unitNameSelectOptions}
+                  onMatch={matchManually}
                 ></UnmatchedModal>
 
                 <ChartsModal
-                  datas={dataCahces}
+                  datas={dataCaches}
                 ></ChartsModal>
 
                 <Button
@@ -390,12 +428,12 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                     {
                       sheetName: '一次提交成绩单',
                       columns: columnsNameList,
-                      data: dataCahces.first,
+                      data: dataCaches.first,
                     },
                     {
                       sheetName: '二次提交成绩单',
                       columns: columnsNameList,
-                      data: dataCahces.second,
+                      data: dataCaches.second,
                     },
                   ], '完整成绩单')}
                 >导出成绩</Button>
