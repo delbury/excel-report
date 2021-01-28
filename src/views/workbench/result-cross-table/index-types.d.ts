@@ -19,3 +19,17 @@ export interface ResolvedDataTypeMap {
 
 export type UnmatchedCachesType = ResolvedDataTypeMap;
 export { TableDataRowNameList };
+
+export interface ChartBasisParams {
+  joinedRate?: number; // 参考率
+  passedRate?: number; // 通过率
+  averageScores?: number; // 参考人员平均分
+}
+
+export interface ChartStatisticalParams extends ChartBasisParams {
+  totalPeople: number; // 总人数
+  joinedPeople: number; // 参考人数
+  passedPeople: number; // 通过人数
+  totalScores: number; // 参考人员总分
+  isOutsource: boolean; // 是否是委外单位
+}

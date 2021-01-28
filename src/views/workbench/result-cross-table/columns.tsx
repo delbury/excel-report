@@ -1,5 +1,5 @@
 import { TableColumns } from '../index-types';
-import { TableDataRowNameList } from './columns-types';
+import { TableDataRowNameList, TableDataRowChart } from './columns-types';
 import { ResolvedDataType } from './index-types';
 import { Button } from 'antd';
 import { LinkOutlined, DisconnectOutlined } from '@ant-design/icons';
@@ -200,3 +200,71 @@ export const getColumnsResolvedData = (cb: (record?: ResolvedDataType, index?: n
     },
   ];
 };
+
+// 图表导出表格
+export const columnsCharts: TableColumns<TableDataRowChart> = [
+  {
+    title: '单位',
+    titleName: '单位',
+    key: 'unitName',
+    dataIndex: 'unitName',
+    ellipsis: true,
+    width: 200,
+  },
+  {
+    title: '月份',
+    titleName: '月份',
+    key: 'monthName',
+    dataIndex: 'monthName',
+    ellipsis: true,
+    width: 80,
+  },
+  {
+    title: '考试人数',
+    titleName: '考试人数',
+    key: 'joinedPeople',
+    dataIndex: 'joinedPeople',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '合格线',
+    titleName: '合格线',
+    key: 'passLine',
+    dataIndex: 'passLine',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '平均分',
+    titleName: '平均分',
+    key: 'averageScores',
+    dataIndex: 'averageScores',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '合格率',
+    titleName: '合格率',
+    key: 'passedRate',
+    dataIndex: 'passedRate',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '补考合格率',
+    titleName: '补考合格率',
+    key: 'rePassedRate',
+    dataIndex: 'rePassedRate',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '主要问题',
+    titleName: '主要问题',
+    key: 'remark',
+    dataIndex: 'remark',
+    ellipsis: true,
+    width: 150,
+  },
+];

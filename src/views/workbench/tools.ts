@@ -52,7 +52,12 @@ export const validateFormula = function (formula: string, row: Row, map: TableCo
 
 
 // 生成 excel sheet
-export const generateExcelSheet = (columns: TableColumns<any>, data: TableDataRow[]): WorkSheet => {
+export const generateExcelSheet = (
+  columns: TableColumns<any>,
+  data: TableDataRow[],
+  additionalRows?: string[]
+): WorkSheet => {
+
   const map: Map<string, string> = new Map();
   const res: any = [];
   const colInfos: ColInfo[] = [];
@@ -72,6 +77,13 @@ export const generateExcelSheet = (columns: TableColumns<any>, data: TableDataRo
     res.push(obj);
   });
 
+  if (additionalRows) {
+    res.push({}); // 插入空行
+
+    const firstKey = map.values().next().value;
+    additionalRows.forEach(msg => res.push({ [firstKey]: msg }));
+  }
+
   const sheet = XLSX.utils.json_to_sheet(res);
   sheet['!cols'] = colInfos;
   return sheet;
@@ -79,15 +91,16 @@ export const generateExcelSheet = (columns: TableColumns<any>, data: TableDataRo
 
 // 导出 excel 文件
 interface ExportParam {
-  sheetName: string;
-  columns: TableColumns<any>;
-  data: TableDataRow[];
+  sheetName: string; // 表名
+  columns: TableColumns<any>; // 表头
+  data: TableDataRow[]; // 表格数据
+  additionalRows?: string[]; // 附加行
 }
 export const exportExcelFile = (params: ExportParam[], fileName: string = '导出结果') => {
   const wb = XLSX.utils.book_new();
 
   params.forEach((item) => {
-    const sheet = generateExcelSheet(item.columns, item.data);
+    const sheet = generateExcelSheet(item.columns, item.data, item.additionalRows);
     XLSX.utils.book_append_sheet(wb, sheet, item.sheetName);
   });
 

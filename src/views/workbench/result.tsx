@@ -522,10 +522,39 @@ class Result extends React.Component<IProps, IState> {
   
   // 合并导出
   handleExportAll() {
-    const wb = XLSX.utils.book_new();
-    this.handleExportPart1(wb);
-    this.handleExportPart2(wb);
-    XLSX.writeFile(wb, '培训情况、必知必会分析结果.xlsx');
+    // const wb = XLSX.utils.book_new();
+    // this.handleExportPart1(wb);
+    // this.handleExportPart2(wb);
+    // XLSX.writeFile(wb, '培训情况、必知必会分析结果.xlsx');
+
+    exportExcelFile([
+      {
+        columns: this.state.tableColumnsA,
+        data: this.state.tableDataA,
+        sheetName: '核心技能情况表',
+        additionalRows: this.state.tableDataA.filter(item => !item.isCondition).map(item => 
+          `${item.monthName}设备维保必知必会培训计划完成${item.trainPersonCount}人次，实际完成${item.trainPersonCount}人次，主要完成${item.remarksText}等${item.trainProjectCount}个技能项点的培训。`
+        ),
+      },
+      {
+        columns: this.state.tableColumnsB,
+        data: this.state.tableDataB,
+        sheetName: '培训基本情况表',
+      },
+      {
+        columns: this.state.tableColumnsC,
+        data: this.state.tableDataC,
+        sheetName: '培训师情况表',
+      },
+      {
+        columns: this.state.tableColumnsD,
+        data: this.state.tableDataD,
+        sheetName: '必知必会评估表',
+        additionalRows: this.state.tableDataD.filter(item => !item.isCondition).map(item => 
+          `${item.monthName}完成设备维保必知必会验收评定${item.assessCount}人，实际通过${item.passedCount}人，通过率为${((item.passedRate ?? 0) * 100).toFixed(2)}%，其中理论验收${item.theoryCount}人，实操验收${item.trainCount}人，验收主要技能项点为：${item.remarksText}。`
+        )
+      },
+    ], '培训情况、必知必会分析结果');
   }
 
   render() {
@@ -535,12 +564,12 @@ class Result extends React.Component<IProps, IState> {
           <div className="workbench-result-btns">
             <Button.Group>
               <Button type="primary" size="small" onClick={() => this.handleCalcPatr1()}>分析月度培训明细表</Button>
-              <Button size="small" onClick={ () => this.handleExportPart1() }>导出</Button>
+              {/* <Button size="small" onClick={ () => this.handleExportPart1() }>导出</Button> */}
             </Button.Group>
 
             <Button.Group>
               <Button type="primary" size="small" onClick={() => this.handleCalcPatr2()}>分析必知必会评估明细表</Button>
-              <Button size="small" onClick={ () => this.handleExportPart2() }>导出</Button>
+              {/* <Button size="small" onClick={ () => this.handleExportPart2() }>导出</Button> */}
             </Button.Group>
 
             <Button size="small" icon={<DownloadOutlined />} onClick={ () => this.handleExportAll() }>整合导出</Button>

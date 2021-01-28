@@ -98,6 +98,7 @@ const ResultCharts: React.FC<IProps> = function (props: IProps) {
           label: {
             show: true,
             position: 'top',
+            fontSize: 10,
             formatter: (params: { value: any; seriesName: string; }) =>
               params.value[params.seriesName] ? (+params.value[params.seriesName]).toFixed(2) : '',
           }
