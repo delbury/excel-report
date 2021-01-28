@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../index-types';
 import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input } from 'antd';
 import { UploadFile } from 'antd/lib/upload/interface';
-import { UploadOutlined, DownloadOutlined, SelectOutlined } from '@ant-design/icons';
+import { UploadOutlined, DownloadOutlined, SelectOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { TableDataRowNameList } from './columns-types';
 import { getColumnsNameList } from './columns';
 import { sheetFieldMap } from './sheet-fields-map';
@@ -439,6 +439,18 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                 >导出成绩</Button>
               </> : null
           }
+
+          <Button.Group size="small" style={{ marginRight: 0 }}>
+            <Button>保存</Button>
+            <Button>读取</Button>
+          </Button.Group>
+          <Tooltip
+            title={<><div>保存正在处理的数据到本地</div><div>读取本地已保存的数据</div></>}
+            placement="right"
+            className="mg-l-10"
+          >
+            <InfoCircleOutlined />
+          </Tooltip>
         </div>
       </div>
 
