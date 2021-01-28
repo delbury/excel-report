@@ -257,7 +257,11 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       });
     }
 
-    handleFilterNameList();
+    handleFilterNameList(); // 更新总名单
+    setDataCaches({
+      first: dataCaches.first,
+      second: dataCaches.second,
+    }); // 更新图表
   };
 
   // 生成表头
