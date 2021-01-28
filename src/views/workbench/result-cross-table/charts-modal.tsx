@@ -249,7 +249,7 @@ const ChartModal: React.FC<IProps> = function (props: IProps) {
   // 统计信息
   const theInfo = useMemo<string>(() => {
     const data = resolvedDatas[0].get(TOTAL_UNIT_NAME);
-    const data2 = resolvedDatas[0].get(TOTAL_UNIT_NAME);
+    const data2 = resolvedDatas[1].get(TOTAL_UNIT_NAME);
     if (!data || !data2) return '';
 
     const month = date ? (date.month() + 1) : '-';
