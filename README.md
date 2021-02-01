@@ -1,4 +1,15 @@
 # Excel Report 处理工具
+
+## 环境搭建
+  1. 安装 git
+  2. 安装 node
+  3. 设置npm淘宝镜像：`npm config set registry https://registry.npm.taobao.org --global`
+  4. 拉取仓库 `git clone https://github.com/delbury/excel-report.git`
+  5. 进入项目文件夹 `cd ./excel-report`
+  6. 切换分支 `git checkout -b customized origin/customized`
+  7. 安装依赖 `npm ci`
+  8. 更新代码 `git pull`
+  9. 打包 `npm run build`
 ## Excel 导入部分
 ### Excel Sheet 过滤逻辑
   1. 过滤表中存在合并单元格的行
