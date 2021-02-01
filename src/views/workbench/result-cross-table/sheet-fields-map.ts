@@ -13,6 +13,12 @@ export const sheetFieldMap: Map<string, ExternalParamsMap> = new Map([
     phone: 'G',
     station: 'D',
   }],
+  ['委外', {
+    unitName: 'A',
+    name: 'A',
+    phone: 'G',
+    station: 'D',
+  }],
   ['十二局', {
     unitName: 'C',
     name: 'D',

@@ -47,8 +47,10 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const [separatedData, setSeparatedData] = useState<SeparatedDataType | null>(null);
   const [dataCaches, setDataCaches] = useState<DataCachesType>({ first: [], second: [] });
   const [unmatchedCaches, setUnmatchedCaches] = useState<UnmatchedCachesType>({ first: [], second: [] });
-  const [namesFileListA, setNamesFileListA] = useState<UploadFile[]>([]); // 车间花名册
+  const [namesFileListA, setNamesFileListA] = useState<UploadFile[]>([]); // 车间通讯录
   const [namesFileListB, setNamesFileListB] = useState<UploadFile[]>([]); // 委外花名册
+  const [namesFileListC, setNamesFileListC] = useState<UploadFile[]>([]); // 委外通讯录
+
   const [unitNameSelectOptions, setUnitNameSelectOptions] = useState<{ label: string; value: string; }[]>([]); // 单位选择项
 
   // 查询条件
@@ -68,8 +70,8 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
 
   // 生成全部名单
   const handleGenerateTotalNameList = () => {
-    if (!namesFileListA.length && !namesFileListB.length) {
-      return message.warning('请先选择车间和委外的花名册！');
+    if (!namesFileListA.length && (!namesFileListB.length || !namesFileListC.length)) {
+      return message.warning('请先选择车间和委外的名单文件！');
     }
 
     props.toggleLoading(true);
@@ -77,7 +79,16 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
     setTimeout(async () => {
       const unitNameSet: Set<string> = new Set(); // 保存所有不同的 unitName
       const dataMapWorkshop = await getTableDatasFromExcel(namesFileListA[0]?.originFileObj);
-      const dataMapOutsource = await getTableDatasFromExcel(namesFileListB[0]?.originFileObj);
+      let outType: 'multi' | 'single' = 'single'; // 委外名单类型
+      const dataMapOutsource = await (async () => {
+        if (namesFileListB.length) {
+          outType = 'multi';
+          return await getTableDatasFromExcel(namesFileListB[0]?.originFileObj);
+        } else {
+          outType = 'single';
+          return await getTableDatasFromExcel(namesFileListC[0]?.originFileObj);
+        }
+      })();
 
       if (!dataMapWorkshop.size && !dataMapOutsource.size) {
         props.toggleLoading(false);
@@ -88,18 +99,23 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       const dataMaps = [dataMapWorkshop, dataMapOutsource];
       const list: TableDataRowNameList[] = [];
       for (let itemIndex in dataMaps) {
-        const dataMap = dataMaps[itemIndex]; // 0：车间，1：委外
+        const dataMap = dataMaps[itemIndex]; // 0：车间，1：委外花名册，2:委外通讯录
 
         for (let [sheetName, data] of dataMap.entries()) {
-          const keyMap = sheetFieldMap.get(itemIndex === '0' ? '车间' : sheetName);
+          const keyMap = sheetFieldMap.get(itemIndex === '0' ? '车间' : outType === 'single' ? '委外' : sheetName);
           const tempArr: TableDataRowNameList[] = [];
           // tempFilteredDataMap.set(sheetName, tempArr);
           if (keyMap) {
             data.forEach(item => {
               let unitName = '';
+              let name = item[keyMap.name];
               if (itemIndex === '0') {
                 const arr = item[keyMap.unitName].split('/');
                 unitName = arr[arr.length - 1];
+              } else if (outType === 'single') {
+                const t = item[keyMap.unitName].split('-');
+                unitName = t[0];
+                name = t[1];
               } else {
                 unitName = item[keyMap.unitName];
               }
@@ -107,7 +123,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
               const tempObj = {
                 id: (idCount++).toString(),
                 unitName,
-                name: item[keyMap.name],
+                name,
                 phone: item[keyMap.phone],
                 station: item[keyMap.station],
                 isOutsource: itemIndex === '1',
@@ -336,7 +352,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
               trigger={['click']}
               content={
                 <div className="workbench-result-uploads-box">
-                  {/* 车间花名册 */}
+                  {/* 车间通讯录*/}
                   <Upload
                     accept=".xlsx, .xls"
                     fileList={namesFileListA}
@@ -347,11 +363,27 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                       setNamesFileListA(fileList);
                     }}
                   >
-                    <Button size="small" icon={<UploadOutlined />}>选择车间花名册</Button>
+                    <Button size="small" icon={<UploadOutlined />}>选择车间通讯录</Button>
+                  </Upload>
+                  
+                  {/* 委外通讯录 */}
+                  <Upload
+                    disabled={!!namesFileListB.length}
+                    accept=".xlsx, .xls"
+                    fileList={namesFileListC}
+                    beforeUpload={() => false}
+                    className="upload"
+                    onChange={ev => {
+                      const fileList: UploadFile[] = ev.fileList.slice(-1);
+                      setNamesFileListC(fileList);
+                    }}
+                  >
+                    <Button disabled={!!namesFileListB.length} size="small" icon={<UploadOutlined />}>选择委外通讯录</Button>
                   </Upload>
 
                   {/* 委外花名册 */}
                   <Upload
+                    disabled={!!namesFileListC.length}
                     accept=".xlsx, .xls"
                     fileList={namesFileListB}
                     beforeUpload={() => false}
@@ -361,7 +393,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                       setNamesFileListB(fileList);
                     }}
                   >
-                    <Button size="small" icon={<UploadOutlined />}>选择委外花名册</Button>
+                    <Button disabled={!!namesFileListC.length} size="small" icon={<UploadOutlined />}>选择委外花名册</Button>
                   </Upload>
                 </div>
               }>
