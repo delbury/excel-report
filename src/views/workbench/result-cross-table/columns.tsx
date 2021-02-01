@@ -155,7 +155,7 @@ export const columnsNameListMerged: TableColumns<TableDataRowNameListMerged> = [
     key: 'station',
     dataIndex: 'station',
     ellipsis: true,
-    width: 100,
+    width: 150,
   },
   {
     title: '一次成绩',

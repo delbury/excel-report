@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { DataCachesType, ChartStatisticalParams } from './index-types';
-import { Modal, Button, Checkbox, DatePicker, Tooltip, Input } from 'antd';
+import { Modal, Button, Checkbox, DatePicker, Tooltip, Input, Radio } from 'antd';
 import style from '../style/chart.module.scss';
 import { echarts, ECOption } from '@/lib/echarts';
 import moment from 'moment';
@@ -93,7 +93,9 @@ const createBaseOption = (
   };
 };
 
-const ChartModal: React.FC<IProps> = function (props: IProps) {
+type DataGroupType = 'all' | 'inside' | 'outside';
+
+const ChartsModal: React.FC<IProps> = function (props: IProps) {
   const [showModal, setShowModal] = useState<boolean>(false); // 显示未匹配信息详情弹框
   const [showTechnicalGroup, setShowTechnicalGroup] = useState<boolean>(false); // 是否统计技术组
   const [date, setDate] = useState<moment.Moment | null>(moment()); // 日期
@@ -102,6 +104,7 @@ const ChartModal: React.FC<IProps> = function (props: IProps) {
   const firstPassedChartEle = useRef<HTMLCanvasElement>(null); // 图表
   const secondPassedChartEle = useRef<HTMLCanvasElement>(null); // 图表
   const averageScoresChartEle = useRef<HTMLCanvasElement>(null); // 图表
+  const [dataGroup, setDataGroup] = useState<DataGroupType>('all'); // 展示的数据集合
 
   // 计算数据
   const resolvedDatas = useMemo(() => {
@@ -113,6 +116,14 @@ const ChartModal: React.FC<IProps> = function (props: IProps) {
       const unitMap = unitMaps[i];
 
       unitDatas[i].forEach(item => {
+        // 过滤
+        if (
+          (dataGroup === 'inside' && item.isOutsource === true) ||
+          (dataGroup === 'outside' && item.isOutsource === false)
+        ) {
+          return;
+        }
+
         if (unitMap.has(item.unitName)) {
           // 累计
           const old = unitMap.get(item.unitName);
@@ -164,7 +175,7 @@ const ChartModal: React.FC<IProps> = function (props: IProps) {
     }
 
     return unitMaps;
-  }, [props.datas]);
+  }, [props.datas, dataGroup]);
 
   useEffect(() => {
     if (
@@ -274,6 +285,13 @@ const ChartModal: React.FC<IProps> = function (props: IProps) {
         <div className="flex-h-sb">
           <div className="toolbar mg-b-10">
             <Button size="small" type="primary" onClick={handleExportExcel}>导出表格数据</Button>
+
+            <Radio.Group size="small" value={dataGroup} onChange={ev => setDataGroup(ev.target.value)}>
+              <Radio value="all">全部</Radio>
+              <Radio value="inside">车间</Radio>
+              <Radio value="outside">委外</Radio>
+            </Radio.Group>
+            
             <Tooltip title="选择考试日期">
               <DatePicker
                 picker="month"
@@ -314,4 +332,4 @@ const ChartModal: React.FC<IProps> = function (props: IProps) {
   );
 };
 
-export default ChartModal;
+export default ChartsModal;
