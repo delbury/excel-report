@@ -113,7 +113,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
               const value: number = +ev.target.value;
               const rows = [...that.state.tableDataB];
               rows[index].nowPersonCount = value;
-              rows[index].averTrainHours = value ? rows[index].trainHours / value : undefined;
+              rows[index].averTrainHours = value ? +(rows[index].trainHours / value).toFixed(2) : undefined;
 
               const sameTableRows = rows.filter(row => row.type === rows[index].type && row.unitName === rows[index].unitName);
               const k: number = rows[index].type === 'M' ? 42 : rows[index].type === 'P' ? 60 : 1; // 年度培训课时完成率系数
@@ -124,7 +124,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
                 } else {
                   row.yearAverHours = (row.averTrainHours ?? 0) + (rows[ind - 1].yearAverHours ?? 0);
                 }
-                row.completeRate = (row.yearAverHours ?? 0) / k;
+                row.completeRate = +((row.yearAverHours ?? 0) / k).toFixed(2);
               });
               // 计算年度培训课时完成率
               // sameTableRows.forEach((row, ind) => {
@@ -225,7 +225,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
               const value: number = +ev.target.value;
               const rows = [...that.state.tableDataC];
               rows[index].personCount = value;
-              rows[index].rate = value ? rows[index].personCourseCount / value : undefined;
+              rows[index].rate = value ? +(rows[index].personCourseCount / value).toFixed(2) : undefined;
 
               rows.forEach((row, index) => {
                

@@ -248,7 +248,7 @@ class Result extends React.Component<IProps, IState> {
     for (let index in dataB) {
       const value: number = dataB[index].nowPersonCount ?? 0;
       const rows = dataB;
-      rows[index].averTrainHours = value ? rows[index].trainHours / value : undefined;
+      rows[index].averTrainHours = value ? +(rows[index].trainHours / value).toFixed(2) : undefined;
 
       const sameTableRows = rows.filter(row => row.type === rows[index].type && row.unitName === rows[index].unitName);
       const k: number = rows[index].type === 'M' ? 42 : rows[index].type === 'P' ? 60 : 1; // 年度培训课时完成率系数
@@ -259,7 +259,7 @@ class Result extends React.Component<IProps, IState> {
         } else {
           row.yearAverHours = (row.averTrainHours ?? 0) + (rows[ind - 1].yearAverHours ?? 0);
         }
-        row.completeRate = (row.yearAverHours ?? 0) / k;
+        row.completeRate = +((row.yearAverHours ?? 0) / k).toFixed(2);
       });
     }
 
@@ -313,10 +313,10 @@ class Result extends React.Component<IProps, IState> {
         id: (this.idCount++).toString(),
         ...params,
         month: +key,
-        averHours: params.totalHours / params.personCourseCount,
+        averHours: +(params.totalHours / params.personCourseCount).toFixed(2),
         monthName: key + '月',
         personCount: 7,
-        rate: params.personCourseCount / 7,
+        rate: +(params.personCourseCount / 7).toFixed(2),
       });
     }
 
@@ -423,7 +423,7 @@ class Result extends React.Component<IProps, IState> {
         ...params,
         month: +key,
         monthName: key + '月',
-        passedRate: params.assessCount ? params.passedCount / params.assessCount : undefined,
+        passedRate: params.assessCount ? +(params.passedCount / params.assessCount).toFixed(2) : undefined,
         remarksText: remarksTextArr.join('、'),
       });
     }
