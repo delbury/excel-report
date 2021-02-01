@@ -1,5 +1,5 @@
 import { TableColumns } from '../index-types';
-import { TableDataRowNameList, TableDataRowChart } from './columns-types';
+import { TableDataRowNameList, TableDataRowChart, TableDataRowNameListMerged } from './columns-types';
 import { ResolvedDataType } from './index-types';
 import { Button, Tooltip } from 'antd';
 import { LinkOutlined, DisconnectOutlined, SelectOutlined } from '@ant-design/icons';
@@ -123,7 +123,75 @@ export const getColumnsNameList = (
   ];
 };
 
+// 导出的成绩合并表头
+export const columnsNameListMerged: TableColumns<TableDataRowNameListMerged> = [
+  {
+    title: '单位',
+    titleName: '单位',
+    key: 'unitName',
+    dataIndex: 'unitName',
+    ellipsis: true,
+    width: 200,
+  },
+  {
+    title: '姓名',
+    titleName: '姓名',
+    key: 'name',
+    dataIndex: 'name',
+    ellipsis: true,
+    width: 80,
+  },
+  {
+    title: '手机号码',
+    titleName: '手机号码',
+    key: 'phone',
+    dataIndex: 'phone',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '岗位',
+    titleName: '岗位',
+    key: 'station',
+    dataIndex: 'station',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '一次成绩',
+    titleName: '一次成绩',
+    key: 'score1',
+    dataIndex: 'score1',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '一次通过',
+    titleName: '一次通过',
+    key: 'result1',
+    dataIndex: 'result1',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '二次成绩',
+    titleName: '二次成绩',
+    key: 'score2',
+    dataIndex: 'score2',
+    ellipsis: true,
+    width: 100,
+  },
+  {
+    title: '二次通过',
+    titleName: '二次通过',
+    key: 'result2',
+    dataIndex: 'result2',
+    ellipsis: true,
+    width: 100,
+  },
+];
 
+// 导入的成绩表格格式
 export const getColumnsResolvedData = (cb: (record?: ResolvedDataType, index?: number) => any): TableColumns<ResolvedDataType> => {
 
   return [

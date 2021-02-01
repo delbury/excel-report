@@ -3,8 +3,8 @@ import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../ind
 import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input } from 'antd';
 import { UploadFile } from 'antd/lib/upload/interface';
 import { UploadOutlined, DownloadOutlined, SelectOutlined } from '@ant-design/icons';
-import { TableDataRowNameList } from './columns-types';
-import { getColumnsNameList } from './columns';
+import { TableDataRowNameList, TableDataRowNameListMerged } from './columns-types';
+import { getColumnsNameList, columnsNameListMerged } from './columns';
 import { sheetFieldMap } from './sheet-fields-map';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
@@ -20,7 +20,7 @@ import {
 } from './index-types';
 import { EnumTimes, EnumColumns } from './enums';
 import { exportExcelFile, getTableDatasFromExcel } from '../tools';
-import DelVirtualTable from '@/components/del-virtual-table';
+// import DelVirtualTable from '@/components/del-virtual-table';
 // type FilteredDataMap = Map<string, TableDataRowNameList[]>;
 
 const ONLY_MATCH_PHONE: boolean = true;
@@ -339,6 +339,42 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
     setTimeout(() => props.toggleLoading(false), 0);
   };
 
+  // 导出成绩
+  const handleExportScore = () => {
+    const mergedData: TableDataRowNameListMerged[] = [];
+
+    dataCaches.first.forEach((item, index) => {
+      mergedData.push({
+        unitName: item.unitName,
+        phone: item.phone,
+        station: item.station,
+        name: item.name,
+        score1: item.score,
+        result1: item.result,
+        score2: dataCaches.second[index].score,
+        result2: dataCaches.second[index].result,
+      });
+    });
+
+    exportExcelFile([
+      // {
+      //   sheetName: '一次提交成绩单',
+      //   columns: columnsNameList,
+      //   data: dataCaches.first,
+      // },
+      // {
+      //   sheetName: '二次提交成绩单',
+      //   columns: columnsNameList,
+      //   data: dataCaches.second,
+      // },
+      {
+        sheetName: '成绩单',
+        columns: columnsNameListMerged,
+        data: mergedData,
+      },
+    ], '完整成绩单');
+  };
+
   return (
     <div className={`workbench-result ${props.className}`}>
       <div className="workbench-result-toolbar">
@@ -460,18 +496,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                 <Button
                   size="small"
                   icon={<DownloadOutlined />}
-                  onClick={() => exportExcelFile([
-                    {
-                      sheetName: '一次提交成绩单',
-                      columns: columnsNameList,
-                      data: dataCaches.first,
-                    },
-                    {
-                      sheetName: '二次提交成绩单',
-                      columns: columnsNameList,
-                      data: dataCaches.second,
-                    },
-                  ], '完整成绩单')}
+                  onClick={handleExportScore}
                 >导出成绩</Button>
               </> : null
           }

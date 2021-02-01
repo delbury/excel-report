@@ -32,3 +32,14 @@ export interface TableDataRowChartBasis extends ChartStatisticalParams {
 }
 
 export interface TableDataRowChart extends TableDataRowChartBasis, TableDataRow { };
+
+export interface TableDataRowNameListMerged {
+  unitName: string;
+  name: string;
+  station: string;
+  phone: string;
+  score1?: number;
+  result1?: string;
+  score2?: number;
+  result2?: string;
+}

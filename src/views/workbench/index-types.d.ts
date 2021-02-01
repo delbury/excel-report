@@ -1,7 +1,7 @@
 import { ColumnsType, ColumnType } from 'antd/es/table';
 
 export interface TableDataRow {
-  id: string;
+  id?: string;
   [key: string]: any;
 }
 export type TableData = TableDataRow[];
