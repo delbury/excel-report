@@ -383,7 +383,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
             <Button type="primary" onClick={() => handleGenerateTotalNameList()}>生成名单</Button>
 
             <Popover
-              title="选择花名册"
+              title="选择名单文件"
               placement="bottomLeft"
               trigger={['click']}
               content={
