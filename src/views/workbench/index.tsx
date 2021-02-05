@@ -299,10 +299,12 @@ class Workbench extends React.PureComponent<IProps, IState> {
   render() {
     // const headerMap = this.tableColumnsMapCaches[this.state.currentSheet];
 
+    const hideTop = this.state.currentAnalysisType === AnalysisTypes.Score;
+
     return (
       <Layout className="workbench">
         <Content className="workbench-content">
-          <div className="workbench-operation">
+          <div className="workbench-operation" style={{ height: hideTop ? '0' : '', marginBottom: hideTop ? '-10px' : '' }}>
             <div className="workbench-operation-left">
               <Upload
                 accept=".xlsx, .xls"
@@ -338,16 +340,18 @@ class Workbench extends React.PureComponent<IProps, IState> {
           </div>
           <div className="workbench-preview">
             <div className="workbench-preview-main-table-container">
-              <Table
-                columns={this.state.tableColumns}
-                dataSource={this.state.tableData}
-                size="small"
-                bordered
-                scroll={{ x: 'max-content', y: 150 }}
-                rowKey="id"
-                pagination={false}
-                sticky={true}
-              />
+              <div style={{ height: hideTop ? '0' : '' }}>
+                <Table
+                  columns={this.state.tableColumns}
+                  dataSource={this.state.tableData}
+                  size="small"
+                  bordered
+                  scroll={{ x: 'max-content', y: 150 }}
+                  rowKey="id"
+                  pagination={false}
+                  sticky={true}
+                />
+              </div>
 
               <div className="additional-toolbar">
                 <Radio.Group

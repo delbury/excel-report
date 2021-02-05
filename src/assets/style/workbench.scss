@@ -1,5 +1,6 @@
 $border-base: 1px solid rgb(240, 242, 245);
 $bg-color-deep: rgb(240, 242, 245);
+$transition-height: height 200ms;
 
 .workbench {
   padding: 20px;
@@ -17,6 +18,8 @@ $bg-color-deep: rgb(240, 242, 245);
     display: flex;
     justify-content: space-between;
     height: 60px;
+    overflow: hidden;
+    // transition: $transition-height;
 
     // &-left {}
 
