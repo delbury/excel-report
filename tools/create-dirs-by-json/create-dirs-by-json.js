@@ -16,6 +16,12 @@ async function main() {
   try {
     console.log('start creating...');
 
+    try {
+      await fs.access(outputPath);
+    } catch {
+      await fs.mkdir(outputPath);
+    }
+
     const root = await readJson(jsonPath);
 
     const args = process.argv.slice(2);
