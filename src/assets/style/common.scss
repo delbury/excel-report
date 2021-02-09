@@ -42,14 +42,33 @@
   display: flex;
   justify-content: space-between;
 }
-
-.fw-b {
-  font-weight: bold;
+.flex-half {
+  flex: 1 1 50%;
+}
+.flex-fill {
+  flex: 1;
+}
+.flex-end {
+  justify-content: flex-end;
 }
 
+.label {
+  display: inline-block;
+  text-align: right;
+  width: 6em;
+}
+.row {
+  &~.row {
+    margin-top: 10px;
+  }
+}
 
 .none {
   display: none !important;
+}
+
+.fw-b {
+  font-weight: bold;
 }
 
 .bg-none {

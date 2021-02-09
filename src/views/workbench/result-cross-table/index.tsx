@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../index-types';
 import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input } from 'antd';
 import { UploadFile } from 'antd/lib/upload/interface';
-import { UploadOutlined, DownloadOutlined, SelectOutlined } from '@ant-design/icons';
+import { UploadOutlined, DownloadOutlined, SelectOutlined, SettingOutlined } from '@ant-design/icons';
 import { TableDataRowNameList, TableDataRowNameListMerged } from './columns-types';
 import { getColumnsNameList, columnsNameListMerged } from './columns';
 import { sheetFieldMap } from './sheet-fields-map';
@@ -18,13 +18,25 @@ import {
   ResolvedDataTypeMap,
   ResolvedDataType,
 } from './index-types';
-import { EnumTimes, EnumColumns } from './enums';
+import { EnumTimes, enumColumns, EnumColumns } from './enums';
 import { exportExcelFile, getTableDatasFromExcel } from '../tools';
 // import DelVirtualTable from '@/components/del-virtual-table';
 // type FilteredDataMap = Map<string, TableDataRowNameList[]>;
 
 const ONLY_MATCH_PHONE: boolean = true;
-  
+const SKIP_ROWS: number = 8;
+const WEEK_SCORE_COL: { [key in keyof EnumColumns]: string; } = {
+  Name: 'B', // 姓名
+  Phone: 'D', // 手机
+  Score: 'F', // 得分
+  Pass: 'G', // 是否通过
+  Time: 'H', // 交卷时间
+  Duration: 'I', // 考试用时
+  Code: '', // 员工编码
+  Major: '', // 所属专业
+  Unit: 'E', // 所在单位
+};
+
 interface IProps {
   className?: string;
   outerData: TableDataRow[];
@@ -59,6 +71,11 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const [searchName, setSearchName] = useState<string>(); // 姓名
   const [searchPhone, setSearchPhone] = useState<string>(); // 手机号码
   const [searchStation, setSearchStation] = useState<string>(); // 岗位
+
+  // 成绩文件解析配置
+  const [skipRows, setSkipRows] = useState<number>(SKIP_ROWS); // 表头跳过行数
+  const [enumColumnsConfig, setEnumColumnsConfig] = useState<EnumColumns>(enumColumns); // 成绩文件列对应
+
 
   let idCount: number = Date.now(); // 全局 id
 
@@ -160,17 +177,31 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
     props.toggleLoading(true);
     try {
       // 整合所有成绩
-      const totalData: ResolvedDataType[] = [];
+      let totalData: ResolvedDataType[] = [];
       let idCount: number = Date.now();
       for (let item of fileList) {
         if (item.originFileObj) {
-          const data = await resolveScoreExcelFile(item.originFileObj);
+          const data = await resolveScoreExcelFile(item.originFileObj, skipRows);
           totalData.push(...data);
         }
       }
 
       // 生成 id
-      totalData.forEach(item => item.id = (idCount++).toString());
+      // 数据格式化
+      totalData = totalData.map(item => {
+        return {
+          id: (idCount++).toString(),
+          Name: item[enumColumnsConfig.Name], // 姓名
+          Phone: item[enumColumnsConfig.Phone], // 手机
+          Score: item[enumColumnsConfig.Score], // 得分
+          Pass: item[enumColumnsConfig.Pass], // 是否通过
+          Time: item[enumColumnsConfig.Time], // 交卷时间
+          Duration: item[enumColumnsConfig.Duration], // 考试用时
+          Code: item[enumColumnsConfig.Code], // 员工编码
+          Major: item[enumColumnsConfig.Major], // 所属专业
+          Unit: item[enumColumnsConfig.Unit], // 所在单位
+        };
+      });
 
       const timesData = separateScoreDateTimes(totalData);
       const firstTimeDataMap: Map<string, ResolvedDataType> = new Map();
@@ -181,6 +212,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
         first: firstTimeDataMap,
         second: secondTimeDataMap,
       });
+
 
       const map: Map<string, TableDataRowNameList> = new Map(); // hash 用于搜索优化
       // 计算1次提交成绩
@@ -204,19 +236,29 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
 
         timesDatasArr[i].forEach(item => {
           const hash: string = ONLY_MATCH_PHONE ?
-            item[EnumColumns.Phone] : item[EnumColumns.Name] + item[EnumColumns.Phone]; // 匹配条件
+            item.Phone : item.Name + item.Phone; // 匹配条件
 
           // item.id = (idCount++).toString();
           if (map.has(hash)) {
             const row = map.get(hash);
             if (row) {
-              row.score = Number(item[EnumColumns.Score]);
-              row.result = item[EnumColumns.Pass];
+              row.score = Number(item.Score);
+              row.result = item.Pass;
               row.isMatched = true;
               row.matchedId = item.id;
             }
           } else {
-            unmatchedBothDatas[i].push(item);
+            unmatchedBothDatas[i].push({
+              Name: item.Name, // 姓名
+              Phone: item.Phone, // 手机
+              Score: item.Score, // 得分
+              Pass: item.Pass, // 是否通过
+              Time: item.Time, // 交卷时间
+              Duration: item.Duration, // 考试用时
+              Code: item.Code, // 员工编码
+              Major: item.Major, // 所属专业
+              Unit: item.Unit, // 所在单位
+            });
           }
         });
       }
@@ -251,8 +293,10 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const matchManually = (times: EnumTimes, matchingItem: ResolvedDataType, matchedItem: TableDataRowNameList) => {
     matchedItem.isMatched = true;
     matchedItem.matchedId = matchingItem.id;
-    matchedItem.result = matchingItem[EnumColumns.Pass];
-    matchedItem.score = matchingItem[EnumColumns.Score];
+    matchedItem.result = matchingItem.Pass;
+    matchedItem.score = +matchingItem.Score;
+
+    console.log(matchingItem);
 
     if (times === EnumTimes.First) {
       const unmatchedList = unmatchedCaches.first;
@@ -375,12 +419,29 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
     ], '完整成绩单');
   };
 
+  // 列对应改变
+  const handleEnumColumnsChange = (key: keyof EnumColumns, value: string) => {
+    value = value.toUpperCase();
+    if (/^[A-Z]{0,3}$/.test(value)) {
+      const obj = { ...enumColumnsConfig };
+      obj[key] = value;
+
+      setEnumColumnsConfig(obj);
+    }
+  };
+
   return (
     <div className={`workbench-result ${props.className}`}>
       <div className="workbench-result-toolbar">
         <div className="workbench-result-btns">
           <Button.Group size="small">
-            <Button type="primary" onClick={() => handleGenerateTotalNameList()}>生成名单</Button>
+            <Button type="primary" onClick={() => {
+              try {
+                handleGenerateTotalNameList();
+              } catch {
+                message.error('选择的名单文件格式错误！');
+              }
+            }}>生成名单</Button>
 
             <Popover
               title="选择名单文件"
@@ -433,6 +494,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                   </Upload>
                 </div>
               }>
+              
               <Button icon={<SelectOutlined />}>选择</Button>
             </Popover>
           </Button.Group>
@@ -444,18 +506,158 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
             <InfoCircleOutlined />
           </Tooltip> */}
 
-          <Upload
-            accept=".xlsx, .xls"
-            fileList={fileList}
-            beforeUpload={() => false}
-            onChange={ev => setFileList(ev.fileList)}
-            multiple
-            className={`workbench-result-upload${fileList.length ? '' : ' is-empty'}`}
-          >
-            <Badge count={fileList.length} size="small" offset={[-8, -1]}>
-              <Button size="small" icon={<UploadOutlined />}>选择成绩文件</Button>
-            </Badge>
-          </Upload>
+          <Button.Group size="small">
+            <Upload
+              accept=".xlsx, .xls"
+              fileList={fileList}
+              beforeUpload={() => false}
+              onChange={ev => setFileList(ev.fileList)}
+              multiple
+              className={`workbench-result-upload${fileList.length ? '' : ' is-empty'}`}
+            >
+              <Badge count={fileList.length} size="small" offset={[-8, -1]}>
+                <Button size="small" icon={<UploadOutlined />}>选择成绩文件</Button>
+              </Badge>
+            </Upload>
+
+            <Popover
+              title="设置成绩文件列映射关系"
+              trigger={['click']}
+              content={() => (
+                <div style={{ width: '350px' }}>
+                  <div className="flex-h-sb row">
+                    <span className="label">跳过行数：</span>
+                    <Input 
+                      className="flex-fill"
+                      size="small"
+                      placeholder="输入跳过行数"
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={skipRows}
+                      onChange={ev => setSkipRows(Math.trunc(+ev.target.value ?? 0))}
+                      disabled
+                    ></Input>
+                  </div>
+
+                  <div className="flex-h-sb row">
+                    <div className="flex-h-sb flex-half">
+                      <span className="label">姓名：</span>
+                      <Input 
+                        className="flex-fill"
+                        size="small"
+                        placeholder="输入列名"
+                        value={enumColumnsConfig.Name}
+                        onChange={ev => handleEnumColumnsChange('Name', ev.target.value)}
+                      ></Input>
+                    </div>
+                    <div className="flex-h-sb flex-half">
+                      <span className="label">手机：</span>
+                      <Input 
+                        className="flex-fill"
+                        size="small"
+                        placeholder="输入列名"
+                        value={enumColumnsConfig.Phone}
+                        onChange={ev => handleEnumColumnsChange('Phone', ev.target.value)}
+                      ></Input>
+                    </div>
+                  </div>
+
+                  <div className="flex-h-sb row">
+                    <div className="flex-h-sb flex-half">
+                      <span className="label">得分：</span>
+                      <Input 
+                        className="flex-fill"
+                        size="small"
+                        placeholder="输入列名"
+                        value={enumColumnsConfig.Score}
+                        onChange={ev => handleEnumColumnsChange('Score', ev.target.value)}
+                      ></Input>
+                    </div>
+                    <div className="flex-h-sb flex-half">
+                      <span className="label">是否通过：</span>
+                      <Input 
+                        className="flex-fill"
+                        size="small"
+                        placeholder="输入列名"
+                        value={enumColumnsConfig.Pass}
+                        onChange={ev => handleEnumColumnsChange('Pass', ev.target.value)}
+                      ></Input>
+                    </div>
+                  </div>
+
+                  <div className="flex-h-sb row">
+                    <div className="flex-h-sb flex-half">
+                      <span className="label">交卷时间：</span>
+                      <Input 
+                        className="flex-fill"
+                        size="small"
+                        placeholder="输入列名"
+                        value={enumColumnsConfig.Time}
+                        onChange={ev => handleEnumColumnsChange('Time', ev.target.value)}
+                      ></Input>
+                    </div>
+                    <div className="flex-h-sb flex-half">
+                      <span className="label">考试用时：</span>
+                      <Input 
+                        className="flex-fill"
+                        size="small"
+                        placeholder="输入列名"
+                        value={enumColumnsConfig.Duration}
+                        onChange={ev => handleEnumColumnsChange('Duration', ev.target.value)}
+                      ></Input>
+                    </div>
+                  </div>
+
+                  <div className="flex-h-sb row">
+                    <div className="flex-h-sb flex-half">
+                      <span className="label">员工编码：</span>
+                      <Input 
+                        className="flex-fill"
+                        size="small"
+                        placeholder="输入列名"
+                        value={enumColumnsConfig.Code}
+                        onChange={ev => handleEnumColumnsChange('Code', ev.target.value)}
+                      ></Input>
+                    </div>
+                    <div className="flex-h-sb flex-half">
+                      <span className="label">所属专业：</span>
+                      <Input 
+                        className="flex-fill"
+                        size="small"
+                        placeholder="输入列名"
+                        value={enumColumnsConfig.Major}
+                        onChange={ev => handleEnumColumnsChange('Major', ev.target.value)}
+                      ></Input>
+                    </div>
+                  </div>
+
+                  <div className="flex-h-sb row">
+                    <div className="flex-h-sb flex-half">
+                      <span className="label">所在单位：</span>
+                      <Input 
+                        className="flex-fill"
+                        size="small"
+                        placeholder="输入列名"
+                        value={enumColumnsConfig.Unit}
+                      ></Input>
+                    </div>
+                    <div className="flex-h-sb flex-half flex-end">
+                      <Button className="mg-r-10" size="small" onClick={() => {
+                        setEnumColumnsConfig(WEEK_SCORE_COL);
+                      }}>周考</Button>
+                      <Button size="small" onClick={() => {
+                        setEnumColumnsConfig(enumColumns);
+                        setSkipRows(SKIP_ROWS);
+                      }}>重置</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            >
+              <Button icon={<SettingOutlined />}></Button>
+            </Popover>
+          </Button.Group>
 
           <Button size="small" type="primary" onClick={() => resolveScoreExcelFiles()}>确认导入</Button>
           {
@@ -487,6 +689,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                   unmatchedData={unmatchedCaches}
                   unitNameSelectOptions={unitNameSelectOptions}
                   onMatch={matchManually}
+                  enumColumns={enumColumnsConfig}
                 ></UnmatchedModal>
 
                 <ChartsModal

@@ -1,11 +1,11 @@
 import XLSX, { WorkBook, WorkSheet } from 'xlsx';
 import { ResolvedDataTypeMap, ResolvedDataType } from './index-types';
-import { EnumColumns } from './enums';
+import { enumColumns } from './enums';
 
 const USELESS_LINES = 8; // 表头多余行
 
 // 解析成绩 excel 文件
-export const resolveScoreExcelFile = (file: File | Blob): Promise<{}[]> => {
+export const resolveScoreExcelFile = (file: File | Blob, skipRows: number = USELESS_LINES): Promise<ResolvedDataType[]> => {
   return new Promise((resolve, reject) => {
     const fileReader: FileReader = new FileReader();
   
@@ -18,7 +18,7 @@ export const resolveScoreExcelFile = (file: File | Blob): Promise<{}[]> => {
   
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const resolvedData = XLSX.utils.sheet_to_json<ResolvedDataType>(sheet, {
-        range: USELESS_LINES, // 去除表头行
+        range: skipRows, // 去除表头行
         header: 'A',
       });
 
@@ -36,11 +36,12 @@ export const resolveScoreExcelFile = (file: File | Blob): Promise<{}[]> => {
 
 // 过滤一次提交的成绩和二次提交的成绩
 export const separateScoreDateTimes = (totalData: ResolvedDataType[]): ResolvedDataTypeMap => {
+  // 过滤没有成绩的数据
   // 按时间排序，升序
-  totalData.sort((a, b) => {
-    if (a[EnumColumns.Time] > b[EnumColumns.Time]) {
+  totalData = totalData.filter(item => !!item.Score).sort((a, b) => {
+    if (a.Time > b.Time) {
       return 1;
-    } else if (a[EnumColumns.Time] < b[EnumColumns.Time]) {
+    } else if (a.Time < b.Time) {
       return -1;
     }
     return 0;
@@ -52,7 +53,7 @@ export const separateScoreDateTimes = (totalData: ResolvedDataType[]): ResolvedD
   const resultData1: ResolvedDataType[] = []; // 一次提交的成绩数据
   const resultData2: ResolvedDataType[] = []; // 二次提交的成绩数据
   for (let item of totalData) {
-    const hash: string = item[EnumColumns.Name] + item[EnumColumns.Phone]; // 构造 hash，名字 + 手机
+    const hash: string = item.Name + item.Phone; // 构造 hash，名字 + 手机
     if (hashSet1.has(hash)) {
       // 非第一次提交
       if (!hashSet2.has(hash)) {

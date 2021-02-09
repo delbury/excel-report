@@ -40,6 +40,7 @@ interface IProps {
   toggleLoading: (status?: boolean) => void;
   unitNameSelectOptions: { label: string; value: string; }[];
   onMatch?: (times: EnumTimes, matchingItem: ResolvedDataType, matchedItem: TableDataRowNameList) => void;
+  enumColumns: EnumColumns;
 }
 
 const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
@@ -64,18 +65,18 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
     if (!currentMatching) return [];
 
     const infoList: { key: string; value: string; }[] = [];
-    infoList.push({ key: '姓名', value: currentMatching[EnumColumns.Name] });
-    infoList.push({ key: '手机号码', value: currentMatching[EnumColumns.Phone] });
-    infoList.push({ key: '得分', value: currentMatching[EnumColumns.Score] });
-    infoList.push({ key: '是否通过', value: currentMatching[EnumColumns.Pass] });
-    infoList.push({ key: '交卷时间', value: currentMatching[EnumColumns.Time] });
-    infoList.push({ key: '考试用时', value: currentMatching[EnumColumns.Duration] });
-    infoList.push({ key: '员工编码', value: currentMatching[EnumColumns.Code] });
-    infoList.push({ key: '所属专业', value: currentMatching[EnumColumns.Major] });
-    infoList.push({ key: '所在单位', value: currentMatching[EnumColumns.Unit] });
+    infoList.push({ key: '姓名', value: currentMatching.Name });
+    infoList.push({ key: '手机号码', value: currentMatching.Phone });
+    infoList.push({ key: '得分', value: currentMatching.Score.toString() });
+    infoList.push({ key: '是否通过', value: currentMatching.Pass });
+    infoList.push({ key: '交卷时间', value: currentMatching.Time });
+    infoList.push({ key: '考试用时', value: currentMatching.Duration });
+    infoList.push({ key: '员工编码', value: currentMatching.Code });
+    infoList.push({ key: '所属专业', value: currentMatching.Major });
+    infoList.push({ key: '所在单位', value: currentMatching.Unit });
 
     return infoList;
-  }, [currentMatching]);
+  }, [currentMatching, props.enumColumns]);
 
   // 总条数
   const currentTotal = useMemo<number>(() => {
@@ -166,8 +167,8 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
 
     setShowSecondModal(true);
     setSearchIsMatched('0');
-    setSearchName(record[EnumColumns.Name]);
-    handleFilterNameList('0', record[EnumColumns.Name]);
+    setSearchName(record.Name);
+    handleFilterNameList('0', record.Name);
   });
   
   return (

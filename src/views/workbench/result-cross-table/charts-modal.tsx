@@ -26,6 +26,7 @@ const createBaseOption = (
   resolvedData: Map<string, ChartStatisticalParams>,
   keyName: string,
   showTechnicalGroup: boolean = false,
+  isWeek: boolean = false,
 ): ECOption => {
   const dateStr: string = date?.format('YYYY-MM') ?? '';
   
@@ -55,7 +56,7 @@ const createBaseOption = (
 
   return {
     title: {
-      text: `${unitName}${dateStr}月考${title}`,
+      text: `${unitName}${dateStr}${isWeek ? '周考' : '月考'}${title}`,
       textAlign: 'center',
       left: '50%',
     },
@@ -104,6 +105,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
   const averageScoresChartEle = useRef<HTMLCanvasElement>(null); // 图表
   const secondTotalPassedChartEle = useRef<HTMLCanvasElement>(null); // 图表
   const [dataGroup, setDataGroup] = useState<DataGroupType>('all'); // 展示的数据集合
+  const [isWeek, setIsWeek] = useState<boolean>(false); // 是否周考
 
   // 单位名
   const totalUnitName = useMemo<string>(() => {
@@ -223,23 +225,23 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
 
     // 参考率图表
     const examRateChart = echarts.init(examRateChartEle.current, {}, commonEchartsOption);
-    const optionA: ECOption = createBaseOption(totalUnitName, '参加考试率', date, resolvedDatas[0], 'joinedRate', showTechnicalGroup);
+    const optionA: ECOption = createBaseOption(totalUnitName, '参加考试率', date, resolvedDatas[0], 'joinedRate', showTechnicalGroup, isWeek);
 
     // 一次通过率
     const firstPassedChart = echarts.init(firstPassedChartEle.current, {}, commonEchartsOption);
-    const optionB: ECOption = createBaseOption(totalUnitName, '一次通过率', date, resolvedDatas[0], 'passedRate', showTechnicalGroup);
+    const optionB: ECOption = createBaseOption(totalUnitName, '一次通过率', date, resolvedDatas[0], 'passedRate', showTechnicalGroup, isWeek);
     
     // 补考合格率
     const secondPassedChart = echarts.init(secondPassedChartEle.current, {}, commonEchartsOption);
-    const optionC: ECOption = createBaseOption(totalUnitName, '补考合格率（二次）', date, resolvedDatas[1], 'passedRate', showTechnicalGroup);
+    const optionC: ECOption = createBaseOption(totalUnitName, '补考合格率（二次）', date, resolvedDatas[1], 'passedRate', showTechnicalGroup, isWeek);
 
     // 平均分
     const averageScoresChart = echarts.init(averageScoresChartEle.current, {}, commonEchartsOption);
-    const optionD: ECOption = createBaseOption(totalUnitName, '平均分（一次）', date, resolvedDatas[0], 'averageScores', showTechnicalGroup);
+    const optionD: ECOption = createBaseOption(totalUnitName, '平均分（一次）', date, resolvedDatas[0], 'averageScores', showTechnicalGroup, isWeek);
   
     // 二次通过率，包括一次
     const secondTotalChart = echarts.init(secondTotalPassedChartEle.current, {}, commonEchartsOption);
-    const optionE: ECOption = createBaseOption(totalUnitName, '二次通过率（总）', date, resolvedDatas[1], 'allPassedRate', showTechnicalGroup);
+    const optionE: ECOption = createBaseOption(totalUnitName, '二次通过率（总）', date, resolvedDatas[1], 'allPassedRate', showTechnicalGroup, isWeek);
 
     examRateChart.setOption(optionA);
     firstPassedChart.setOption(optionB);
@@ -254,7 +256,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
       averageScoresChart.dispose();
       secondTotalChart.dispose();
     };
-  }, [resolvedDatas, date, showTechnicalGroup, showModal]);
+  }, [resolvedDatas, date, showTechnicalGroup, showModal, isWeek]);
 
   // 关闭弹框
   const close = () => setShowModal(false);
@@ -292,10 +294,10 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
       {
         columns: columnsCharts,
         data: tableDataRows,
-        sheetName: '月考统计表',
+        sheetName: (isWeek ? '周考' : '月考') + '统计表',
         additionalRows: [theInfo],
       }
-    ], `${date?.format('YYYY-MM') ?? ''}月考统计表`);
+    ], `${date?.format('YYYY-MM') ?? ''}${isWeek ? '周考' : '月考'}统计表`);
   };
 
   // 统计信息
@@ -307,7 +309,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
     const month = date ? (date.month() + 1) : '-';
 
 
-    return `${totalUnitName}${month}月月考考试人数${data.joinedPeople}人，合格线${passLine.toFixed(2)}分，平均分${data.averageScores?.toFixed(2)}分，合格率${((data.passedRate ?? 0) * 100).toFixed(2)}%，补考合格率${((data2.passedRate ?? 0) * 100).toFixed(2)}%，总合格率${((data2.allPassedRate ?? 0) * 100).toFixed(2)}%。`;
+    return `${totalUnitName}${month}月${isWeek ? '周考' : '月考'}考试人数${data.joinedPeople}人，合格线${passLine.toFixed(2)}分，平均分${data.averageScores?.toFixed(2)}分，合格率${((data.passedRate ?? 0) * 100).toFixed(2)}%，补考合格率${((data2.passedRate ?? 0) * 100).toFixed(2)}%，总合格率${((data2.allPassedRate ?? 0) * 100).toFixed(2)}%。`;
   }, [resolvedDatas, date, passLine]);
 
   return (
@@ -321,7 +323,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
         cancelText="关闭"
         okText="确定"
         width="80vw"
-        style={{ top: '40px' }}
+        style={{ top: '40px', paddingBottom: 0 }}
       >
         <div className="flex-h-sb mg-b-10">
           <div className="toolbar">
@@ -354,6 +356,12 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
                 onChange={ev => setPassLine(+ev.target.value || 0)}
               ></Input>
             </Tooltip>
+
+            <Checkbox
+              checked={isWeek}
+              onChange={ev => setIsWeek(ev.target.checked)}
+            >是否周考</Checkbox>
+
             <Checkbox
               checked={showTechnicalGroup}
               onChange={ev => setShowTechnicalGroup(ev.target.checked)}
