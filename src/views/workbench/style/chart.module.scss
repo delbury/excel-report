@@ -12,6 +12,12 @@
   height: 700px;
   width: 100%;
   overflow: auto;
+
+  &::after {
+    display: block;
+    width: 700px;
+    content: "";
+  }
 }
 
 // .chart {

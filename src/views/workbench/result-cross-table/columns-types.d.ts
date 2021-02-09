@@ -29,6 +29,7 @@ export interface TableDataRowChartBasis extends ChartStatisticalParams {
   passLine?: number;
   remark?: string;
   rePassedRate?: number;
+  allPassedRate?: number;
 }
 
 export interface TableDataRowChart extends TableDataRowChartBasis, TableDataRow { };

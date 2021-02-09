@@ -24,6 +24,9 @@ export interface ChartBasisParams {
   joinedRate?: number; // 参考率
   passedRate?: number; // 通过率
   averageScores?: number; // 参考人员平均分
+  allPassedRate?: number; // 两次总通过率
+  allPassedPeople?: number; // 两次通过人数
+  allJoinedPeople?: number; // 两次总参考人数
 }
 
 export interface ChartStatisticalParams extends ChartBasisParams {

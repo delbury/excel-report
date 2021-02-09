@@ -102,6 +102,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
   const firstPassedChartEle = useRef<HTMLCanvasElement>(null); // 图表
   const secondPassedChartEle = useRef<HTMLCanvasElement>(null); // 图表
   const averageScoresChartEle = useRef<HTMLCanvasElement>(null); // 图表
+  const secondTotalPassedChartEle = useRef<HTMLCanvasElement>(null); // 图表
   const [dataGroup, setDataGroup] = useState<DataGroupType>('all'); // 展示的数据集合
 
   // 单位名
@@ -146,6 +147,18 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
             isOutsource: item.isOutsource,
           });
         }
+
+        // 统计两次总数据
+        if (i === 1) {
+          const second = unitMap.get(item.unitName);
+          const firstRow = unitDatas[0][i];
+          const secondRow = item;
+
+          if (second) {
+            second.allJoinedPeople = (second.allJoinedPeople ?? 0) + (secondRow.score || firstRow.score ? 1 : 0);
+            second.allPassedPeople = (second.allPassedPeople ?? 0) + (firstRow.result === '是' || secondRow.result === '是' ? 1 : 0);
+          }
+        }
       });
     }
 
@@ -157,22 +170,41 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
         passedPeople: 0,
         totalScores: 0,
         isOutsource: false,
+        allJoinedPeople: 0,
+        allPassedPeople: 0,
+        allPassedRate: 0,
       };
       for (let list of unitMaps[i].values()) {
         list.passedRate = list.joinedPeople ? +(list.passedPeople / list.joinedPeople).toFixed(2) : 0;
         list.averageScores = list.joinedPeople ? +(list.totalScores / list.joinedPeople).toFixed(2) : 0;
         list.joinedRate = list.totalPeople ? +(list.joinedPeople / list.totalPeople).toFixed(2) : 0;
 
+        // 两次汇总统计
+        if (i === 1) {
+          list.allPassedRate = list.allJoinedPeople ? +((list.allPassedPeople ?? 0) / list.allJoinedPeople).toFixed(2) : 0;
+        }
+
         if (true || !list.isOutsource) {
           totalParams.totalPeople += list.totalPeople;
           totalParams.joinedPeople += list.joinedPeople;
           totalParams.passedPeople += list.passedPeople;
-          totalParams.totalScores += list.totalScores;
+          totalParams.totalScores += list.totalScores;  
+
+          // 两次汇总统计
+          if (i === 1) {
+            totalParams.allJoinedPeople = (totalParams.allJoinedPeople ?? 0) + (list.allJoinedPeople ?? 0);
+            totalParams.allPassedPeople = (totalParams.allPassedPeople ?? 0) + (list.allPassedPeople ?? 0);
+          }
         }
       } 
       totalParams.passedRate = totalParams.joinedPeople ? +(totalParams.passedPeople / totalParams.joinedPeople).toFixed(2) : 0;
       totalParams.averageScores = totalParams.joinedPeople ? +(totalParams.totalScores / totalParams.joinedPeople).toFixed(2) : 0;
       totalParams.joinedRate = totalParams.totalPeople ? +(totalParams.joinedPeople / totalParams.totalPeople).toFixed(2) : 0;
+
+      // 两次汇总统计
+      if (i == 1) {
+        totalParams.allPassedRate = totalParams.allJoinedPeople ? +((totalParams.allPassedPeople ?? 0) / totalParams.allJoinedPeople).toFixed(2) : 0;
+      }
 
       unitMaps[i].set(totalUnitName, totalParams);
     }
@@ -184,7 +216,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
     if (
       !examRateChartEle.current || !firstPassedChartEle.current ||
       !secondPassedChartEle.current || !averageScoresChartEle.current ||
-      !showModal
+      !secondTotalPassedChartEle.current || !showModal
     ) {
       return;
     }
@@ -197,25 +229,30 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
     const firstPassedChart = echarts.init(firstPassedChartEle.current, {}, commonEchartsOption);
     const optionB: ECOption = createBaseOption(totalUnitName, '一次通过率', date, resolvedDatas[0], 'passedRate', showTechnicalGroup);
     
-    // 二次通过率
+    // 补考合格率
     const secondPassedChart = echarts.init(secondPassedChartEle.current, {}, commonEchartsOption);
-    const optionC: ECOption = createBaseOption(totalUnitName, '二次通过率', date, resolvedDatas[1], 'passedRate', showTechnicalGroup);
+    const optionC: ECOption = createBaseOption(totalUnitName, '补考合格率（二次）', date, resolvedDatas[1], 'passedRate', showTechnicalGroup);
 
     // 平均分
     const averageScoresChart = echarts.init(averageScoresChartEle.current, {}, commonEchartsOption);
-    const optionD: ECOption = createBaseOption(totalUnitName, '平均分', date, resolvedDatas[0], 'averageScores', showTechnicalGroup);
+    const optionD: ECOption = createBaseOption(totalUnitName, '平均分（一次）', date, resolvedDatas[0], 'averageScores', showTechnicalGroup);
   
+    // 二次通过率，包括一次
+    const secondTotalChart = echarts.init(secondTotalPassedChartEle.current, {}, commonEchartsOption);
+    const optionE: ECOption = createBaseOption(totalUnitName, '二次通过率（总）', date, resolvedDatas[1], 'allPassedRate', showTechnicalGroup);
 
     examRateChart.setOption(optionA);
     firstPassedChart.setOption(optionB);
     secondPassedChart.setOption(optionC);
     averageScoresChart.setOption(optionD);
+    secondTotalChart.setOption(optionE);
 
     return () => {
       examRateChart.dispose();
       firstPassedChart.dispose();
       secondPassedChart.dispose();
       averageScoresChart.dispose();
+      secondTotalChart.dispose();
     };
   }, [resolvedDatas, date, showTechnicalGroup, showModal]);
 
@@ -247,6 +284,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
         averageScores: value.averageScores,
         rePassedRate: secondData ? secondData.passedRate : undefined,
         passLine: passLine,
+        allPassedRate: secondData?.allPassedRate ?? 0,
       });
     }
 
@@ -269,7 +307,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
     const month = date ? (date.month() + 1) : '-';
 
 
-    return `${totalUnitName}${month}月月考考试人数${data.joinedPeople}人，合格线${passLine.toFixed(2)}分，平均分${data.averageScores?.toFixed(2)}分，合格率${((data.passedRate ?? 0) * 100).toFixed(2)}%，补考合格率${((data2.passedRate ?? 0) * 100).toFixed(2)}%`;
+    return `${totalUnitName}${month}月月考考试人数${data.joinedPeople}人，合格线${passLine.toFixed(2)}分，平均分${data.averageScores?.toFixed(2)}分，合格率${((data.passedRate ?? 0) * 100).toFixed(2)}%，补考合格率${((data2.passedRate ?? 0) * 100).toFixed(2)}%，总合格率${((data2.allPassedRate ?? 0) * 100).toFixed(2)}%。`;
   }, [resolvedDatas, date, passLine]);
 
   return (
@@ -285,8 +323,8 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
         width="80vw"
         style={{ top: '40px' }}
       >
-        <div className="flex-h-sb">
-          <div className="toolbar mg-b-10">
+        <div className="flex-h-sb mg-b-10">
+          <div className="toolbar">
             <Button size="small" type="primary" onClick={handleExportExcel}>导出表格数据</Button>
 
             <Radio.Group size="small" value={dataGroup} onChange={ev => setDataGroup(ev.target.value)}>
@@ -321,7 +359,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
               onChange={ev => setShowTechnicalGroup(ev.target.checked)}
             >是否统计技术组</Checkbox>
           </div>
-          <div>{ theInfo }</div>
+          <div style={{ marginLeft: '10em', textAlign: 'right', wordBreak: 'keep-all' }}>{ theInfo }</div>
         </div>
 
         <div className={style['modal-charts-container']}>
@@ -329,6 +367,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
           <canvas className={style['chart']} ref={firstPassedChartEle}></canvas>
           <canvas className={style['chart']} ref={secondPassedChartEle}></canvas>
           <canvas className={style['chart']} ref={averageScoresChartEle}></canvas>
+          <canvas className={style['chart']} ref={secondTotalPassedChartEle}></canvas>
         </div>
       </Modal>
     </>

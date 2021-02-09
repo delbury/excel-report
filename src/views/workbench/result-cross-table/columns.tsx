@@ -363,6 +363,14 @@ export const columnsCharts: TableColumns<TableDataRowChart> = [
     width: 100,
   },
   {
+    title: '总合格率',
+    titleName: '总合格率',
+    key: 'allPassedRate',
+    dataIndex: 'allPassedRate',
+    ellipsis: true,
+    width: 100,
+  },
+  {
     title: '主要问题',
     titleName: '主要问题',
     key: 'remark',

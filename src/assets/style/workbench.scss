@@ -170,6 +170,7 @@ $transition-height: height 200ms;
       .toolbar {
         background-color: $bg-color-deep;
         padding-bottom: 10px;
+
       }
 
       .result-cross-table {
@@ -295,6 +296,8 @@ $transition-height: height 200ms;
 }
 
 .toolbar {
+  flex-shrink: 0;
+
   >*:not(:last-child) {
     margin-right: 10px;
   }
