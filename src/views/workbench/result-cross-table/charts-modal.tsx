@@ -28,8 +28,8 @@ const createBaseOption = (
   showTechnicalGroup: boolean = false,
   isWeek: boolean = false,
 ): ECOption => {
-  const dateStr: string = date?.format('YYYY-MM') ?? '';
-  
+  const dateStr: string = isWeek ? (date?.format('YYYY-w周') ?? '') : (date?.format('YYYY-MM') ?? '');
+
   const xAxisData: string[] = [];
   const seriesData: number[] = [];
   const temp: { key: string, value: number }[] = [];
@@ -106,6 +106,9 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
   const secondTotalPassedChartEle = useRef<HTMLCanvasElement>(null); // 图表
   const [dataGroup, setDataGroup] = useState<DataGroupType>('all'); // 展示的数据集合
   const [isWeek, setIsWeek] = useState<boolean>(false); // 是否周考
+  const [pickType, setPickType] = useState<'month' | 'week'>('month');
+
+  const dateRef = useRef<any>();
 
   // 单位名
   const totalUnitName = useMemo<string>(() => {
@@ -121,7 +124,7 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
     for (let i = 0; i < unitDatas.length; i++) {
       const unitMap = unitMaps[i];
 
-      unitDatas[i].forEach(item => {
+      unitDatas[i].forEach((item, ind) => {
         // 过滤
         if (
           (dataGroup === 'inside' && item.isOutsource === true) ||
@@ -153,12 +156,12 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
         // 统计两次总数据
         if (i === 1) {
           const second = unitMap.get(item.unitName);
-          const firstRow = unitDatas[0][i];
+          const firstRow = unitDatas[0][ind];
           const secondRow = item;
 
           if (second) {
-            second.allJoinedPeople = (second.allJoinedPeople ?? 0) + (secondRow.score || firstRow.score ? 1 : 0);
-            second.allPassedPeople = (second.allPassedPeople ?? 0) + (firstRow.result === '是' || secondRow.result === '是' ? 1 : 0);
+            second.allJoinedPeople = (second.allJoinedPeople ?? 0) + ((secondRow.score || firstRow.score) ? 1 : 0);
+            second.allPassedPeople = (second.allPassedPeople ?? 0) + ((firstRow.result === '是' || secondRow.result === '是') ? 1 : 0);
           }
         }
       });
@@ -238,15 +241,15 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
     
     // 补考合格率
     const secondPassedChart = echarts.init(secondPassedChartEle.current, {}, commonEchartsOption);
-    const optionC: ECOption = createBaseOption(totalUnitName, '补考合格率（二次）', date, resolvedDatas[1], 'passedRate', showTechnicalGroup, isWeek);
+    const optionC: ECOption = createBaseOption(totalUnitName, '补考合格率', date, resolvedDatas[1], 'passedRate', showTechnicalGroup, isWeek);
 
     // 平均分
     const averageScoresChart = echarts.init(averageScoresChartEle.current, {}, commonEchartsOption);
-    const optionD: ECOption = createBaseOption(totalUnitName, '平均分（一次）', date, resolvedDatas[0], 'averageScores', showTechnicalGroup, isWeek);
+    const optionD: ECOption = createBaseOption(totalUnitName, '平均分', date, resolvedDatas[0], 'averageScores', showTechnicalGroup, isWeek);
   
     // 二次通过率，包括一次
     const secondTotalChart = echarts.init(secondTotalPassedChartEle.current, {}, commonEchartsOption);
-    const optionE: ECOption = createBaseOption(totalUnitName, '二次通过率（总）', date, resolvedDatas[1], 'allPassedRate', showTechnicalGroup, isWeek);
+    const optionE: ECOption = createBaseOption(totalUnitName, '二次通过率', date, resolvedDatas[1], 'allPassedRate', showTechnicalGroup, isWeek);
 
     examRateChart.setOption(optionA);
     firstPassedChart.setOption(optionB);
@@ -349,7 +352,8 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
             
             <Tooltip title="选择考试日期">
               <DatePicker
-                picker="month"
+                ref={dateRef}
+                picker={pickType}
                 size="small"
                 value={date}
                 onChange={(selected, str) => setDate(selected)}
@@ -371,7 +375,10 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
 
             <Checkbox
               checked={isWeek}
-              onChange={ev => setIsWeek(ev.target.checked)}
+              onChange={ev => {
+                setPickType(ev.target.checked ? 'week' : 'month');
+                setIsWeek(ev.target.checked);
+              }}
             >是否周考</Checkbox>
 
             <Checkbox
