@@ -255,9 +255,9 @@ class Result extends React.Component<IProps, IState> {
       // 计算年度累计人均课时
       sameTableRows.forEach((row, ind) => {
         if (ind === 0) {
-          row.yearAverHours = row.averTrainHours ?? 0;
+          row.yearAverHours = +(row.averTrainHours ?? 0).toFixed(2);
         } else {
-          row.yearAverHours = (row.averTrainHours ?? 0) + (rows[ind - 1].yearAverHours ?? 0);
+          row.yearAverHours = +((row.averTrainHours ?? 0) + (rows[ind - 1].yearAverHours ?? 0)).toFixed(2);
         }
         row.completeRate = +((row.yearAverHours ?? 0) / k).toFixed(2);
       });
@@ -555,6 +555,16 @@ class Result extends React.Component<IProps, IState> {
         )
       },
     ], '培训情况、必知必会分析结果');
+  }
+
+  // 获取表格数据
+  getTableDatas() {
+    return {
+      A: this.state.tableDataA,
+      B: this.state.tableDataB,
+      C: this.state.tableDataC,
+      D: this.state.tableDataD,
+    };
   }
 
   render() {

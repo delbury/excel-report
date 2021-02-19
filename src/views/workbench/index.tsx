@@ -22,6 +22,13 @@ import {
   TableColumnsMap,
 } from './index-types';
 import { TEST_FILE_URL } from '@/views/workbench/consts';
+import {
+  Document, Packer, Paragraph, TextRun, HeadingLevel,
+  Table as DocTable, TableCell as DocTableCell, TableRow as DocTableRow,
+  WidthType, VerticalAlign, AlignmentType,
+} from "docx";
+import { getColumnsB, getColumnsC, columnsA, columnsD } from './result-columns';
+import { RefProps } from './result-cross-table/index-types';
 
 enum AnalysisTypes { Train, Score }
 
@@ -48,6 +55,8 @@ class Workbench extends React.PureComponent<IProps, IState> {
   tableColumnsCaches: { [key: string]: TableColumns } = {}; // 表头列配置缓存
   tableDataCaches: { [key: string]: TableData } = {}; // 表格数据缓存
   // tableColumnsMapCaches: { [key: string]: TableColumnsMap } = {}; // 表头配置hash缓存
+  refResult = React.createRef<Result>();
+  refResultCrossTable = React.createRef<RefProps>();
   constructor(props: IProps) {
     super(props);
     this.state = {
@@ -266,6 +275,199 @@ class Workbench extends React.PureComponent<IProps, IState> {
     });
   }
 
+  // 生成 word
+  handleCreateWord = () => {
+    const titleSize: number = 32;
+    const contentFont = { size: 24 };
+    const doc = new Document();
+    // 文本
+    const pText = (text: string = '') => new TextRun({ text, ...contentFont });
+    // 空行
+    const pBlank = () => new Paragraph({ children: [pText()] });
+    // 创建标题
+    const pTitle = (text: string) => new Paragraph({
+      heading: HeadingLevel.HEADING_2,
+      children: [
+        new TextRun({ text, bold: true, color: '000000', font: '黑体', size: titleSize }),
+      ],
+    });
+    // 创建表格
+    const pTable = (
+      headers: { title: string; width: number; key: string; }[],
+      data: TableDataRow[]
+    ) => {
+      const table = new DocTable({
+        width: {
+          size: 100,
+          type: WidthType.PERCENTAGE,
+        },
+        rows: [
+          new DocTableRow({
+            tableHeader: true,
+            children: headers.map(item => new DocTableCell({
+              children: [new Paragraph({
+                children: [new TextRun({ text: item.title, ...contentFont })],
+                alignment: AlignmentType.CENTER,
+              })],
+              width: {
+                size: item.width,
+                type: WidthType.PERCENTAGE,
+              },
+              verticalAlign: VerticalAlign.CENTER,
+            })),
+          }),
+          ...data.map((item, index) => new DocTableRow({
+            children: headers.map(it => new DocTableCell({
+              children: [new Paragraph({
+                children: [new TextRun({ text: (item[it.key] ?? '').toString(), ...contentFont })],
+                alignment: AlignmentType.CENTER,
+              })],
+              width: {
+                size: item.width,
+                type: WidthType.PERCENTAGE,
+              },
+              verticalAlign: VerticalAlign.CENTER,
+            })),
+          }))
+        ]
+      });
+
+      return table;
+    };
+
+    // 获取表格数据
+    if (!this.refResult.current) throw new Error('refResult is undefined');
+    const datas = this.refResult.current.getTableDatas();
+
+    // 数据格式化
+    const getTableHeader = (columns: TableColumns<any>, totalWidth: number) => columns.map(item => ({
+      title: item.titleName,
+      width: +((item.width as number ?? 0) / totalWidth * 100).toFixed(2),
+      key: item.dataIndex as string,
+    }));
+    // 培训情况表格
+    const columnsB = getColumnsB();
+    const tempTotalMaxWidthB = columnsB.reduce((sum, b) => sum + (b.width as number ?? 0), 0);
+    const tableHeaderB = getTableHeader(columnsB, tempTotalMaxWidthB);
+    const tableDataB = datas.B.filter(item => !item.isCondition).sort((a, b) => {
+      const res = a.month - b.month;
+      if (res !== 0) {
+        return res;
+      } else {
+        return a.type.charCodeAt(0) - b.type.charCodeAt(0);
+      }
+    });
+    // 兼职培训师情况
+    const columnsC = getColumnsC();
+    const tempTotalMaxWidthC = columnsC.reduce((sum, b) => sum + (b.width as number ?? 0), 0);
+    const tableHeaderC = getTableHeader(columnsC, tempTotalMaxWidthC);
+    const tableDataC = datas.C.filter(item => !item.isCondition);
+    // 必知必会培训
+    const tempTotalMaxWidthA = columnsA.reduce((sum, b) => sum + (b.width as number ?? 0), 0);
+    const tableHeaderA = getTableHeader(columnsA, tempTotalMaxWidthA);
+    const tableDataA = datas.A.filter(item => !item.isCondition);
+    // 必知必会评估
+    const tempTotalMaxWidthD = columnsD.reduce((sum, b) => sum + (b.width as number ?? 0), 0);
+    const tableHeaderD = getTableHeader(columnsD, tempTotalMaxWidthD);
+    const tableDataD = datas.D.filter(item => !item.isCondition);
+
+
+    // 月考成绩
+    if (!this.refResultCrossTable.current) throw new Error('refResultCrossTable is undefined');
+    const chartsData = this.refResultCrossTable.current.getData();
+    let tableHeaderCharts: ReturnType<typeof getTableHeader> = [];
+    let tableDataCharts: NonNullable<typeof chartsData>['data'] = [];
+
+    if (chartsData) {
+      tableDataCharts = chartsData.data;
+      const tempTotalMaxWidthCharts = chartsData.columns.reduce((sum, b) => sum + (b.width as number ?? 0), 0);
+      tableHeaderCharts = getTableHeader(chartsData.columns, tempTotalMaxWidthCharts);
+    }
+
+    
+    doc.addSection({
+      children: [
+        pTitle('培训情况'),
+        pTable(tableHeaderB, tableDataB),
+        ...tableDataB.map(data => new Paragraph({
+          children: [
+            pText(data.monthName),
+            pText(data.type === 'M' ? '管理和业务技术' : '生产人员'),
+            pText(`参训课时${data.trainHours}小时，`),
+            pText(`参训培训${data.trainCount}次，`),
+            pText(`参训培训${data.trainPersonCount}人次，`),
+            pText(`人均参训课时${data.averTrainHours}小时，`),
+            pText(`年度累计人均课时${data.yearAverHours}小时。`),
+          ]
+        })),
+        pBlank(),
+        pTitle('兼职培训师情况'),
+        pTable(tableHeaderC, tableDataC),
+        ...tableDataC.map(data => new Paragraph({
+          children: [
+            pText(data.monthName),
+            pText(`${data.unitName}内部培训师共${data.personCount}人，`),
+            pText(`培训师授课人数为${data.personCourseCount}人，`),
+            pText(`培训师利用率为${+((data.rate ?? 0) * 100).toFixed(2)}%，`),
+            pText(`总授课学时为${data.totalHours}小时，`),
+            pText(`人均授课学时为${data.averHours}小时。`),
+          ]
+        })),
+        pBlank(),
+        pTitle('必知必会培训'),
+        pTable(tableHeaderA, tableDataA),
+        ...tableDataA.map(data => new Paragraph({
+          children: [
+            pText(data.monthName),
+            pText(`设备维保必知必会培训计划完成${data.trainPersonCount}人次，`),
+            pText(`实际完成${data.trainPersonCount}人次，`),
+            pText(`主要完成${data.remarksText}等${data.remarks?.size ?? 0}个技能项点的培训。`),
+          ]
+        })),
+        pBlank(),
+        pTitle('必知必会评估'),
+        pTable(tableHeaderD, tableDataD),
+        ...tableDataD.map(data => new Paragraph({
+          children: [
+            pText(`${data.monthName}${data.unitName}`),
+            pText(`评估项目数${data.projectCount}个，`),
+            pText(`评估人次${data.assessCount}人次，`),
+            pText(`通过人次${data.passedCount}人次，`),
+            pText(`未通过人次${data.failedCount}人次，`),
+            pText(`合格率${+((data.passedRate ?? 0) * 100).toFixed(2)}%，`),
+            pText(`理论验收人次${data.theoryCount}人次，`),
+            pText(`实操验收人次${data.trainCount}人次。`),
+          ]
+        })),
+        pBlank(),
+        pTitle('每周一练'),
+        pBlank(),
+        pTitle('月考'),
+        tableHeaderCharts.length ? pTable(tableHeaderCharts, tableDataCharts) : pBlank(),
+        pBlank(),
+        pTitle('演练情况'),
+        pBlank(),
+        pTitle('比武情况'),
+
+      ],
+    });
+
+    // 创建并下载
+    Packer.toBuffer(doc).then(buffer => {
+      const blob = new Blob([buffer]);
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = '培训月报.docx';
+      link.style.display = 'none';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    });
+  }
+
 
   componentDidMount() {
     // 初始化选择表区域滚动功能
@@ -279,6 +481,7 @@ class Workbench extends React.PureComponent<IProps, IState> {
     }
 
     // this.test(TEST_FILE_URL);
+    // this.test('/test/test-file2.xlsx');
   }
 
   componentDidUpdate(prevProps: IProps, prevState: IState) {
@@ -354,6 +557,7 @@ class Workbench extends React.PureComponent<IProps, IState> {
               </div>
 
               <div className="additional-toolbar">
+                <Button className="mg-r-10" type="primary" size="small" onClick={() => this.handleCreateWord()}>生成 Word</Button>
                 <Radio.Group
                   options={[
                     { label: '培训分析处理', value: AnalysisTypes.Train },
@@ -378,11 +582,13 @@ class Workbench extends React.PureComponent<IProps, IState> {
             {/* <Analysis columns={this.state.tableColumns} columnsMap={headerMap} data={ this.state.tableData } /> */}
             <div className="workbench-preview-tabs">
               <Result
+                ref={this.refResult}
                 className={'page ' + (this.state.currentAnalysisType === AnalysisTypes.Train ? '' : 'none')}
                 outerColumns={this.state.tableColumns}
                 outerData={this.state.allTableData}
               ></Result>
               <ResultCrossTable
+                ref={this.refResultCrossTable}
                 className={'page ' + (this.state.currentAnalysisType === AnalysisTypes.Score ? '' : 'none')}
                 outerColumns={this.state.tableColumns}
                 outerData={this.state.allTableData}

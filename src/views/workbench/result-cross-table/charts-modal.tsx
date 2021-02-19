@@ -1,5 +1,5 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { DataCachesType, ChartStatisticalParams } from './index-types';
+import React, { useState, useRef, useMemo, useEffect, useImperativeHandle } from 'react';
+import { DataCachesType, ChartStatisticalParams, RefProps } from './index-types';
 import { Modal, Button, Checkbox, DatePicker, Tooltip, Input, Radio } from 'antd';
 import style from '../style/chart.module.scss';
 import { echarts, ECOption } from '@/lib/echarts';
@@ -94,7 +94,7 @@ const createBaseOption = (
 
 type DataGroupType = 'all' | 'inside' | 'outside';
 
-const ChartsModal: React.FC<IProps> = function (props: IProps) {
+const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, ref) {
   const [showModal, setShowModal] = useState<boolean>(false); // 显示未匹配信息详情弹框
   const [showTechnicalGroup, setShowTechnicalGroup] = useState<boolean>(false); // 是否统计技术组
   const [date, setDate] = useState<moment.Moment | null>(moment()); // 日期
@@ -214,6 +214,11 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
     return unitMaps;
   }, [props.datas, dataGroup]);
 
+  useImperativeHandle(ref, () => ({
+    getData: () => handleExportExcel(true),
+  }));
+
+
   useEffect(() => {
     if (
       !examRateChartEle.current || !firstPassedChartEle.current ||
@@ -264,7 +269,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
   const open = () => setShowModal(true);
 
   // 导出 excel
-  const handleExportExcel = () => {
+  const handleExportExcel = (onlyReturnData: boolean = false) => {
     const tableDataRows: TableDataRowChart[] = [];
     
     let idCount: number = Date.now();
@@ -288,6 +293,13 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
         passLine: passLine,
         allPassedRate: secondData?.allPassedRate ?? 0,
       });
+    }
+
+    if (onlyReturnData) {
+      return {
+        columns: columnsCharts,
+        data: tableDataRows,
+      };
     }
 
     exportExcelFile([
@@ -327,7 +339,7 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
       >
         <div className="flex-h-sb mg-b-10">
           <div className="toolbar">
-            <Button size="small" type="primary" onClick={handleExportExcel}>导出表格数据</Button>
+            <Button size="small" type="primary" onClick={() => handleExportExcel()}>导出表格数据</Button>
 
             <Radio.Group size="small" value={dataGroup} onChange={ev => setDataGroup(ev.target.value)}>
               <Radio value="all">全部</Radio>
@@ -380,6 +392,6 @@ const ChartsModal: React.FC<IProps> = function (props: IProps) {
       </Modal>
     </>
   );
-};
+});
 
 export default ChartsModal;

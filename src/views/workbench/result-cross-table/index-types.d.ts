@@ -1,6 +1,6 @@
-import { TableDataRowNameList } from './columns-types';
+import { TableDataRowNameList, TableDataRowChart } from './columns-types';
 import { EnumColumns, enumColumns } from './enums';
-// import { TableDataRow } from '../index-types';
+import { TableDataRow, TableColumns } from '../index-types';
 
 type Ks = keyof enumColumns;
 export interface ResolvedDataType {
@@ -45,4 +45,8 @@ export interface ChartStatisticalParams extends ChartBasisParams {
   passedPeople: number; // 通过人数
   totalScores: number; // 参考人员总分
   isOutsource: boolean; // 是否是委外单位
+}
+
+export interface RefProps {
+  getData: () => ({ columns: TableColumns<TableDataRowChart>; data: TableDataRowChart[] }) | undefined;
 }

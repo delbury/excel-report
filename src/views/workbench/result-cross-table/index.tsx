@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useImperativeHandle, useRef } from 'react';
 import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../index-types';
 import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input } from 'antd';
 import { UploadFile } from 'antd/lib/upload/interface';
@@ -17,6 +17,7 @@ import {
   UnmatchedCachesType,
   ResolvedDataTypeMap,
   ResolvedDataType,
+  RefProps,
 } from './index-types';
 import { EnumTimes, enumColumns, EnumColumns } from './enums';
 import { exportExcelFile, getTableDatasFromExcel } from '../tools';
@@ -50,7 +51,7 @@ interface SeparatedDataType {
   second: Map<string, ResolvedDataType>;
 }
 
-const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
+const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref) => {
   const [tableDataNameList, setTableDataNameList] = useState<TableDataRowNameList[]>([]); // 数据列表
   const [filteredNameList, setFilteredNameList] = useState<TableDataRowNameList[]>([]); // 搜索过滤后的数据列表
   // const [filteredDataMap, setFilteredDataMap] = useState<FilteredDataMap>(new Map());
@@ -76,6 +77,11 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
   const [skipRows, setSkipRows] = useState<number>(SKIP_ROWS); // 表头跳过行数
   const [enumColumnsConfig, setEnumColumnsConfig] = useState<EnumColumns>(enumColumns); // 成绩文件列对应
 
+  // ref
+  const refChartsModal = useRef<RefProps>(null);
+  useImperativeHandle(ref, () => ({
+    getData: () => refChartsModal.current?.getData(),
+  }));
 
   let idCount: number = Date.now(); // 全局 id
 
@@ -693,6 +699,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
                 ></UnmatchedModal>
 
                 <ChartsModal
+                  ref={refChartsModal}
                   datas={dataCaches}
                 ></ChartsModal>
 
@@ -792,7 +799,7 @@ const ResultCrossTable: React.FC<IProps> = function (props: IProps) {
       </div>
     </div>
   );
-};
+});
 
 // export default ResultCrossTable;
 
@@ -801,4 +808,5 @@ const dispatchToProps = (dispatch: Dispatch) => {
     toggleLoading: (status?: boolean) => dispatch(actions.toggleGlobalLoading(status)),
   };
 };
-export default connect(undefined, dispatchToProps)(ResultCrossTable);
+
+export default connect(undefined, dispatchToProps, undefined, { forwardRef: true })(ResultCrossTable);

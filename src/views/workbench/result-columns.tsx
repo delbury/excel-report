@@ -64,7 +64,7 @@ export const columnsA: TableColumns<TableDataRowA> = [
  * 年度累计人均课时：上一个月年度累计人均课时 + 本月人均培训课时
  * 年度培训课时完成率：全年年度累计人均课时 / 系数(42 | 60)
  */
-export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
+export function getColumnsB(that?: Result): TableColumns<TableDataRowB> {
   return [
     {
       title: '单位',
@@ -101,7 +101,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
       ellipsis: true,
       width: 120,
       fixed: 'left',
-      render: (text, record, index) => {
+      render: that ? (text, record, index) => {
         return (
           <Input
             type="number"
@@ -133,7 +133,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
 
               that.setState({ tableDataB: rows });
             }}></Input>);
-      }
+      } : undefined
     },
     {
       title: '培训课时',
@@ -186,7 +186,7 @@ export function getColumnsB(that: Result): TableColumns<TableDataRowB> {
   ];
 }
 
-export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
+export function getColumnsC(that?: Result): TableColumns<TableDataRowC> {
   return [
     {
       title: '单位',
@@ -213,7 +213,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
       dataIndex: 'personCount',
       ellipsis: true,
       width: 100,
-      render: (text, record, index) => {
+      render: that ? (text, record, index) => {
         return (
           <Input
             type="number"
@@ -232,7 +232,7 @@ export function getColumnsC(that: Result): TableColumns<TableDataRowC> {
               });
               that.setState({ tableDataC: rows });
             }}></Input>);
-      }
+      } : undefined
     },
     {
       title: '培训师授课人数',
