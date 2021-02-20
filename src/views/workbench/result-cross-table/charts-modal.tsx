@@ -111,12 +111,13 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
   const dateRef = useRef<any>();
 
   // 单位名
-  const totalUnitName = useMemo<string>(() => {
-    return dataGroup === 'outside' ? '机电三车间委外单位' : '机电三车间';
-  }, [dataGroup]);
+  const totalUnitNameFn = (data: DataGroupType = dataGroup) => {
+    return data === 'outside' ? '机电三车间委外单位' : data === 'all' ? '机电三车间（含委外）' : '机电三车间';
+  };
+  const totalUnitName = useMemo<string>(totalUnitNameFn, [dataGroup]);
 
   // 计算数据
-  const resolvedDatas = useMemo(() => {
+  const resolvedDatasFn = (group: DataGroupType = dataGroup) => {
     // 计算参考率
     const unitMaps: Map<string, ChartStatisticalParams>[] = [new Map(), new Map()];
     const unitDatas = [props.datas.first, props.datas.second];
@@ -127,8 +128,8 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
       unitDatas[i].forEach((item, ind) => {
         // 过滤
         if (
-          (dataGroup === 'inside' && item.isOutsource === true) ||
-          (dataGroup === 'outside' && item.isOutsource === false)
+          (group === 'inside' && item.isOutsource === true) ||
+          (group === 'outside' && item.isOutsource === false)
         ) {
           return;
         }
@@ -193,7 +194,7 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
           totalParams.totalPeople += list.totalPeople;
           totalParams.joinedPeople += list.joinedPeople;
           totalParams.passedPeople += list.passedPeople;
-          totalParams.totalScores += list.totalScores;  
+          totalParams.totalScores += list.totalScores;
 
           // 两次汇总统计
           if (i === 1) {
@@ -201,7 +202,7 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
             totalParams.allPassedPeople = (totalParams.allPassedPeople ?? 0) + (list.allPassedPeople ?? 0);
           }
         }
-      } 
+      }
       totalParams.passedRate = totalParams.joinedPeople ? +(totalParams.passedPeople / totalParams.joinedPeople).toFixed(2) : 0;
       totalParams.averageScores = totalParams.joinedPeople ? +(totalParams.totalScores / totalParams.joinedPeople).toFixed(2) : 0;
       totalParams.joinedRate = totalParams.totalPeople ? +(totalParams.joinedPeople / totalParams.totalPeople).toFixed(2) : 0;
@@ -215,10 +216,20 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
     }
 
     return unitMaps;
-  }, [props.datas, dataGroup]);
+  };
+  const resolvedDatas = useMemo(resolvedDatasFn, [props.datas, dataGroup]);
 
   useImperativeHandle(ref, () => ({
     getData: () => handleExportExcel(true),
+    getInfos: () => {
+      const arr: string[] = [
+        theInfoFn(resolvedDatasFn('all'), false, 'all'),
+        theInfoFn(resolvedDatasFn('inside'), false, 'inside'),
+        theInfoFn(resolvedDatasFn('outside'), false, 'outside'),
+      ];
+
+      return arr;
+    },
   }));
 
 
@@ -316,16 +327,20 @@ const ChartsModal = React.forwardRef<RefProps, IProps>(function (props: IProps, 
   };
 
   // 统计信息
-  const theInfo = useMemo<string>(() => {
-    const data = resolvedDatas[0].get(totalUnitName);
-    const data2 = resolvedDatas[1].get(totalUnitName);
+  const theInfoFn = (
+    datas: Map<string, ChartStatisticalParams>[] = resolvedDatas,
+    isWeekFn: boolean = isWeek,
+    dg?: DataGroupType,
+  ) => {
+    const data = datas[0].get(totalUnitName);
+    const data2 = datas[1].get(totalUnitName);
     if (!data || !data2) return '';
 
     const month = date ? (date.month() + 1) : '-';
 
-
-    return `${totalUnitName}${month}月${isWeek ? '周考' : '月考'}考试人数${data.joinedPeople}人，合格线${passLine.toFixed(2)}分，平均分${data.averageScores?.toFixed(2)}分，合格率${((data.passedRate ?? 0) * 100).toFixed(2)}%，补考合格率${((data2.passedRate ?? 0) * 100).toFixed(2)}%，总合格率${((data2.allPassedRate ?? 0) * 100).toFixed(2)}%。`;
-  }, [resolvedDatas, date, passLine]);
+    return `${dg ? totalUnitNameFn(dg) : totalUnitName}${month}月${isWeekFn ? '周考' : '月考'}考试人数${data.joinedPeople}人，合格线${passLine.toFixed(2)}分，平均分${data.averageScores?.toFixed(2)}分，合格率${((data.passedRate ?? 0) * 100).toFixed(2)}%，补考合格率${((data2.passedRate ?? 0) * 100).toFixed(2)}%，总合格率${((data2.allPassedRate ?? 0) * 100).toFixed(2)}%。`;
+  };
+  const theInfo = useMemo<string>(theInfoFn, [resolvedDatas, date, passLine, totalUnitName]);
 
   return (
     <>

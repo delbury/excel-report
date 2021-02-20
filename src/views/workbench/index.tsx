@@ -384,6 +384,7 @@ class Workbench extends React.PureComponent<IProps, IState> {
       tableHeaderCharts = getTableHeader(chartsData.columns, tempTotalMaxWidthCharts);
     }
 
+    const infos = this.refResultCrossTable.current.getInfos() ?? [];
     
     doc.addSection({
       children: [
@@ -444,6 +445,9 @@ class Workbench extends React.PureComponent<IProps, IState> {
         pBlank(),
         pTitle('月考'),
         tableHeaderCharts.length ? pTable(tableHeaderCharts, tableDataCharts) : pBlank(),
+        ...infos.map(info => new Paragraph({
+          children: [pText(info)],
+        })),
         pBlank(),
         pTitle('演练情况'),
         pBlank(),

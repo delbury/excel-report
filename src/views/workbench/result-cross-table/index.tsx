@@ -81,6 +81,7 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
   const refChartsModal = useRef<RefProps>(null);
   useImperativeHandle(ref, () => ({
     getData: () => refChartsModal.current?.getData(),
+    getInfos: () => refChartsModal.current?.getInfos(),
   }));
 
   let idCount: number = Date.now(); // 全局 id

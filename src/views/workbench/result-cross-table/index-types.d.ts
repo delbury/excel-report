@@ -49,4 +49,5 @@ export interface ChartStatisticalParams extends ChartBasisParams {
 
 export interface RefProps {
   getData: () => ({ columns: TableColumns<TableDataRowChart>; data: TableDataRowChart[] }) | undefined;
+  getInfos: () => string[] | undefined;
 }
