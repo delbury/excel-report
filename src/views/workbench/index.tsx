@@ -298,7 +298,7 @@ class Workbench extends React.PureComponent<IProps, IState> {
     ) => {
       const table = new DocTable({
         width: {
-          size: 100,
+          size: 5000,
           type: WidthType.PERCENTAGE,
         },
         rows: [
