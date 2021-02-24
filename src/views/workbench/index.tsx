@@ -93,6 +93,8 @@ class Workbench extends React.PureComponent<IProps, IState> {
   loadFile = (file: File | Blob | undefined | null, cb?: (wb?: WorkBook | null) => void) => {
     if (!file) return;
 
+    this.clearFile();
+    
     const fileReader: FileReader = new FileReader();
 
     // 开始加载
@@ -171,7 +173,14 @@ class Workbench extends React.PureComponent<IProps, IState> {
     // 过滤存在合并的行
     const validRows: Set<number> = new Set();
     for (let i = range.s.r; i <= range.e.r; i++) {
-      if (!sheet['A' + (i + 1)]) break;
+      let breakFlag = true;
+      for (let j = range.s.c; j <= range.e.c; j++) {
+        if (sheet[XLSX.utils.encode_col(j) + (i + 1)]) {
+          breakFlag = false;
+          break;
+        }
+      }
+      if(breakFlag) break;
         
       if (!mergeRows.has(i)) {
         validRows.add(i + 1);
