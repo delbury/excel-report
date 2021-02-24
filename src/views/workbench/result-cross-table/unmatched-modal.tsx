@@ -57,7 +57,7 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
   const [searchName, setSearchName] = useState<string>(); // 姓名
   const [searchPhone, setSearchPhone] = useState<string>(); // 手机号码
   const [searchStation, setSearchStation] = useState<string>(); // 岗位
-
+  
   const [currentMatching, setCurrentMatching] = useState<ResolvedDataType>(); // 当前被匹配的行
 
   // 当前被匹配项信息格式化
@@ -104,6 +104,16 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
   // 打开弹框
   const open = () => setShowModal(true);
 
+  // 关闭二级弹框
+  const closeSecond = () => {
+    setSearchIsMatched(undefined);
+    setSearchUnitName(undefined);
+    setSearchName(undefined);
+    setSearchPhone(undefined);
+    setSearchStation(undefined);
+    setShowSecondModal(false);
+  };
+
   // 导出
   const handleExportExcel = () => {
     exportExcelFile([
@@ -127,7 +137,7 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
 
     props.onMatch && props.onMatch(timesScores, currentMatching, record);
 
-    setShowSecondModal(false); // 关闭弹框
+    closeSecond(); // 关闭弹框
   });
 
   // 过滤
@@ -233,8 +243,8 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
         <Modal
           title="手动匹配成绩"
           visible={showSecondModal}
-          onCancel={() => setShowSecondModal(false)}
-          onOk={() => setShowSecondModal(false)}
+          onCancel={() => closeSecond()}
+          onOk={() => closeSecond()}
           width="80vw"
         >
           <div style={{ minHeight: '400px' }}>

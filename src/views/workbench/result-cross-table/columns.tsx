@@ -21,7 +21,7 @@ export const getColumnsNameList = (
       fixed: true,
       render: (text, record, index) => {
         return (
-          <Tooltip title="取消匹配">
+          <Tooltip title="取消匹配" placement="left">
             <Button
               ghost
               type="primary"
@@ -215,7 +215,7 @@ export const getColumnsResolvedData = (cb: (record?: ResolvedDataType, index?: n
       fixed: true,
       render: (text, record, index) => {
         return (
-          <Tooltip title="手动匹配">
+          <Tooltip title="手动匹配" placement="left">
             <Button
               ghost
               type="primary"

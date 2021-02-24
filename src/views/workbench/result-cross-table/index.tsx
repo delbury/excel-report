@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useImperativeHandle, useRef } from 'react';
 import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../index-types';
 import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input } from 'antd';
+// import Input from '@/components/del-input';
 import { UploadFile } from 'antd/lib/upload/interface';
 import { UploadOutlined, DownloadOutlined, SelectOutlined, SettingOutlined } from '@ant-design/icons';
 import { TableDataRowNameList, TableDataRowNameListMerged } from './columns-types';
@@ -185,7 +186,7 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
     try {
       // 整合所有成绩
       let totalData: ResolvedDataType[] = [];
-      let idCount: number = Date.now();
+      // let idCount: number = Date.now();
       for (let item of fileList) {
         if (item.originFileObj) {
           const data = await resolveScoreExcelFile(item.originFileObj, skipRows);
@@ -256,6 +257,7 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
             }
           } else {
             unmatchedBothDatas[i].push({
+              id: item.id,
               Name: item.Name, // 姓名
               Phone: item.Phone, // 手机
               Score: item.Score, // 得分
@@ -298,12 +300,12 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
 
   // 手动匹配一行数据
   const matchManually = (times: EnumTimes, matchingItem: ResolvedDataType, matchedItem: TableDataRowNameList) => {
+    console.log(matchingItem, matchedItem);
+
     matchedItem.isMatched = true;
     matchedItem.matchedId = matchingItem.id;
     matchedItem.result = matchingItem.Pass;
     matchedItem.score = +matchingItem.Score;
-
-    console.log(matchingItem);
 
     if (times === EnumTimes.First) {
       const unmatchedList = unmatchedCaches.first;
@@ -522,7 +524,7 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
               multiple
               className={`workbench-result-upload${fileList.length ? '' : ' is-empty'}`}
             >
-              <Badge count={fileList.length} size="small" offset={[-8, -1]}>
+              <Badge count={fileList.length} size="small" offset={[-8, -1]} style={{ zIndex: 5 }}>
                 <Button size="small" icon={<UploadOutlined />}>选择成绩文件</Button>
               </Badge>
             </Upload>

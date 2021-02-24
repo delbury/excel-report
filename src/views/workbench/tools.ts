@@ -3,6 +3,7 @@ import { ResolvedDataType } from './result-cross-table/index-types';
 import { Row } from './analysis';
 import { ReactInstance } from 'react';
 import XLSX, { WorkBook, WorkSheet, ColInfo } from 'xlsx';
+import React from 'react';
 
 // 公式预处理
 const pretreatFormula = function (formula: string): string {
