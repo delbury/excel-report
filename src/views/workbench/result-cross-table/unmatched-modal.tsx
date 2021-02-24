@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Modal, Badge, Button, Table, Radio, Tooltip, Select, Input } from 'antd';
+import { Modal, Badge, Button, Table, Radio, Tooltip, Select, Input, Popconfirm } from 'antd';
 import {
   UnmatchedCachesType,
   ResolvedDataType,
@@ -40,6 +40,7 @@ interface IProps {
   toggleLoading: (status?: boolean) => void;
   unitNameSelectOptions: { label: string; value: string; }[];
   onMatch?: (times: EnumTimes, matchingItem: ResolvedDataType, matchedItem: TableDataRowNameList) => void;
+  onMatchBatch?: (times: EnumTimes, matchingItems: ResolvedDataType[], matchedItems: TableDataRowNameList[]) => void;
   enumColumns: EnumColumns;
 }
 
@@ -180,6 +181,38 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
     setSearchName(record.Name);
     handleFilterNameList('0', record.Name);
   });
+
+  // 自动匹配
+  const handleAutoMatchConfirm = () => {
+    props.toggleLoading(true);
+
+    let list: TableDataRowNameList[] = [];
+    if (timesScores === EnumTimes.First) {
+      list = props.matchedData.first;
+    } else if (timesScores === EnumTimes.Second) {
+      list = props.matchedData.second;
+    }
+
+    const temp: { matchingItems: ResolvedDataType[]; matchedItems: TableDataRowNameList[]; } = {
+      matchingItems: [],
+      matchedItems: []
+    };
+    tableData.forEach((item, index) => { 
+      // 批量匹配
+      const filteredList = list.filter(it =>
+        it.isMatched === false &&
+        it.name === item.Name
+      );
+      
+      if (filteredList.length === 1) {
+        temp.matchingItems.push(item);
+        temp.matchedItems.push(filteredList[0]);
+      }
+    });
+
+    props.onMatchBatch && props.onMatchBatch(timesScores, temp.matchingItems, temp.matchedItems);
+    props.toggleLoading(false);
+  };
   
   return (
     <>
@@ -224,6 +257,15 @@ const UnmatchedModal: React.FC<IProps> = function (props: IProps) {
               <Radio.Button value={EnumTimes.Second}>二次提交</Radio.Button>
             </Badge>
           </Radio.Group>
+          
+          <Popconfirm
+            title="是否自动匹配通过姓名字段筛选出唯一名单信息的成绩？"
+            okText="确定"
+            cancelText="取消"
+            onConfirm={handleAutoMatchConfirm}
+          >
+            <Button size="small">自动匹配</Button>
+          </Popconfirm>
 
           <Button size="small" type="primary" onClick={() => handleExportExcel()}>导出</Button>
         </div>

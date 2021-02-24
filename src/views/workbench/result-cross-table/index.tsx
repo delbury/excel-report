@@ -300,8 +300,6 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
 
   // 手动匹配一行数据
   const matchManually = (times: EnumTimes, matchingItem: ResolvedDataType, matchedItem: TableDataRowNameList) => {
-    console.log(matchingItem, matchedItem);
-
     matchedItem.isMatched = true;
     matchedItem.matchedId = matchingItem.id;
     matchedItem.result = matchingItem.Pass;
@@ -320,6 +318,47 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
       const unmatchedList = unmatchedCaches.second;
       const index = unmatchedList.findIndex(item => item.id === matchingItem.id);
       unmatchedList.splice(index, 1);
+      setUnmatchedCaches({
+        first: unmatchedCaches.first,
+        second: [...unmatchedList],
+      });
+    }
+
+    handleFilterNameList(); // 更新总名单
+    setDataCaches({
+      first: dataCaches.first,
+      second: dataCaches.second,
+    }); // 更新图表
+  };
+
+  // 批量自动匹配数据
+  const matchManuallyBatch = (times: EnumTimes, matchingItems: ResolvedDataType[], matchedItems: TableDataRowNameList[]) => {
+    if (matchingItems.length !== matchedItems.length) return;
+
+    for (let i = 0; i < matchingItems.length; i++) {
+      matchedItems[i].isMatched = true;
+      matchedItems[i].matchedId = matchingItems[i].id;
+      matchedItems[i].result = matchingItems[i].Pass;
+      matchedItems[i].score = +matchingItems[i].Score;
+    }
+
+    if (times === EnumTimes.First) {
+      const unmatchedList = unmatchedCaches.first;
+      matchingItems.forEach(matchingItem => {
+        const index = unmatchedList.findIndex(item => item.id === matchingItem.id);
+        unmatchedList.splice(index, 1);
+      });
+      setUnmatchedCaches({
+        first: [...unmatchedList],
+        second: unmatchedCaches.second,
+      });
+
+    } else if (times === EnumTimes.Second) {
+      const unmatchedList = unmatchedCaches.second;
+      matchingItems.forEach(matchingItem => {
+        const index = unmatchedList.findIndex(item => item.id === matchingItem.id);
+        unmatchedList.splice(index, 1);
+      });
       setUnmatchedCaches({
         first: unmatchedCaches.first,
         second: [...unmatchedList],
@@ -698,6 +737,7 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
                   unmatchedData={unmatchedCaches}
                   unitNameSelectOptions={unitNameSelectOptions}
                   onMatch={matchManually}
+                  onMatchBatch={matchManuallyBatch}
                   enumColumns={enumColumnsConfig}
                 ></UnmatchedModal>
 
