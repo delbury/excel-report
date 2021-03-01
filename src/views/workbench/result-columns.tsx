@@ -120,9 +120,9 @@ export function getColumnsB(that?: Result): TableColumns<TableDataRowB> {
               // 计算年度累计人均课时
               sameTableRows.forEach((row, ind) => {
                 if (ind === 0) {
-                  row.yearAverHours = row.averTrainHours ?? 0;
+                  row.yearAverHours = +(row.averTrainHours ?? 0).toFixed(2);
                 } else {
-                  row.yearAverHours = (row.averTrainHours ?? 0) + (rows[ind - 1].yearAverHours ?? 0);
+                  row.yearAverHours = +((row.averTrainHours ?? 0) + (sameTableRows[ind - 1].yearAverHours ?? 0)).toFixed(2);
                 }
                 row.completeRate = +((row.yearAverHours ?? 0) / k).toFixed(2);
               });

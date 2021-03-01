@@ -257,7 +257,7 @@ class Result extends React.Component<IProps, IState> {
         if (ind === 0) {
           row.yearAverHours = +(row.averTrainHours ?? 0).toFixed(2);
         } else {
-          row.yearAverHours = +((row.averTrainHours ?? 0) + (rows[ind - 1].yearAverHours ?? 0)).toFixed(2);
+          row.yearAverHours = +((row.averTrainHours ?? 0) + (sameTableRows[ind - 1].yearAverHours ?? 0)).toFixed(2);
         }
         row.completeRate = +((row.yearAverHours ?? 0) / k).toFixed(2);
       });
