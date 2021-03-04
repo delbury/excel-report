@@ -415,7 +415,8 @@ class Result extends React.Component<IProps, IState> {
       const remarksTextArr: string[] = [];
       if (params.remarks) {
         for (let val of params.remarks.values()) {
-          remarksTextArr.push(val.replace(/【.*】/, ''));
+          // remarksTextArr.push(val.replace(/【.*】/, ''));
+          remarksTextArr.push(val);
         }
       }
       dataD.push({
