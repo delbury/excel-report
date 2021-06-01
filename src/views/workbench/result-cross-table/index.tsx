@@ -95,8 +95,8 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
 
   // 生成全部名单
   const handleGenerateTotalNameList = () => {
-    if (!namesFileListA.length && (!namesFileListB.length || !namesFileListC.length)) {
-      return message.warning('请先选择车间和委外的名单文件！');
+    if (!namesFileListA.length && (!namesFileListB.length && !namesFileListC.length)) {
+      return message.warning('请先选择车间或委外的名单文件！');
     }
 
     props.toggleLoading(true);
