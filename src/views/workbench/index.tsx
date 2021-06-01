@@ -10,8 +10,7 @@ import { actions } from '@/redux/actions/global';
 import { StoreState } from '@/redux';
 import XLSX, { WorkBook, WorkSheet } from 'xlsx';
 import BScroll, { BScrollInstance } from 'better-scroll';
-// import Analysis from './analysis';
-import Result from './result';
+import TrainingAnalysis from './training-analysis/index';
 import ResultCrossTable from './result-cross-table';
 import { fetchTestFile } from '@/lib/util';
 import {
@@ -27,7 +26,7 @@ import {
   Table as DocTable, TableCell as DocTableCell, TableRow as DocTableRow,
   WidthType, VerticalAlign, AlignmentType,
 } from "docx";
-import { getColumnsB, getColumnsC, columnsA, columnsD } from './result-columns';
+import { getColumnsB, getColumnsC, columnsA, columnsD } from './training-analysis/result-columns';
 import { RefProps } from './result-cross-table/index-types';
 
 enum AnalysisTypes { Train, Score }
@@ -55,7 +54,7 @@ class Workbench extends React.PureComponent<IProps, IState> {
   tableColumnsCaches: { [key: string]: TableColumns } = {}; // 表头列配置缓存
   tableDataCaches: { [key: string]: TableData } = {}; // 表格数据缓存
   // tableColumnsMapCaches: { [key: string]: TableColumnsMap } = {}; // 表头配置hash缓存
-  refResult = React.createRef<Result>();
+  refTrainingAnalysis = React.createRef<TrainingAnalysis>();
   refResultCrossTable = React.createRef<RefProps>();
   constructor(props: IProps) {
     super(props);
@@ -345,8 +344,8 @@ class Workbench extends React.PureComponent<IProps, IState> {
     };
 
     // 获取表格数据
-    if (!this.refResult.current) throw new Error('refResult is undefined');
-    const datas = this.refResult.current.getTableDatas();
+    if (!this.refTrainingAnalysis.current) throw new Error('refTrainingAnalysis is undefined');
+    const datas = this.refTrainingAnalysis.current.getTableDatas();
 
     // 数据格式化
     const getTableHeader = (columns: TableColumns<any>, totalWidth: number) => columns.map(item => ({
@@ -592,14 +591,13 @@ class Workbench extends React.PureComponent<IProps, IState> {
               </div>
             </div>
         
-            {/* <Analysis columns={this.state.tableColumns} columnsMap={headerMap} data={ this.state.tableData } /> */}
             <div className="workbench-preview-tabs">
-              <Result
-                ref={this.refResult}
+              <TrainingAnalysis
+                ref={this.refTrainingAnalysis}
                 className={'page ' + (this.state.currentAnalysisType === AnalysisTypes.Train ? '' : 'none')}
                 outerColumns={this.state.tableColumns}
                 outerData={this.state.allTableData}
-              ></Result>
+              ></TrainingAnalysis>
               <ResultCrossTable
                 ref={this.refResultCrossTable}
                 className={'page ' + (this.state.currentAnalysisType === AnalysisTypes.Score ? '' : 'none')}

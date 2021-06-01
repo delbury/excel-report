@@ -1,6 +1,6 @@
-import { TableColumns } from './index-types';
+import { TableColumns } from '../index-types';
 import { Input } from 'antd';
-import Result from './result';
+import Result from './index';
 import { TableDataRowA, TableDataRowB, TableDataRowC, TableDataRowD } from './result-table-types';
 
 export const columnsA: TableColumns<TableDataRowA> = [

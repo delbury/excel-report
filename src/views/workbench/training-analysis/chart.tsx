@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { TableDataRow, TableColumns } from './index-types';
-import style from './style/chart.module.scss';
+import { TableDataRow, TableColumns } from '../index-types';
+import style from '../style/chart.module.scss';
 import { echarts, ECOption } from '@/lib/echarts';
 
 interface IProps {

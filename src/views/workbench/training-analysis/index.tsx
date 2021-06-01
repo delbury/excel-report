@@ -1,5 +1,5 @@
 import React from 'react';
-import { TableColumns, TableDataRow } from './index-types';
+import { TableColumns, TableDataRow } from '../index-types';
 import { Table, Button, Select, Tabs, List } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { columnsA, getColumnsB, getColumnsC, columnsD } from './result-columns';
@@ -16,7 +16,7 @@ import {
   TableDataRowKinds,
 } from './result-table-types';
 import ResultCharts from './chart';
-import { generateExcelSheet, exportExcelFile } from './tools';
+import { generateExcelSheet, exportExcelFile } from '../tools';
 
 /* eslint-disable @typescript-eslint/indent */
 type ToolbarConfigItemKeyType = 'month' | 'project' | 'role' |
