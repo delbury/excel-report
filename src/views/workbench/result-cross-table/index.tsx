@@ -26,17 +26,17 @@ import { exportExcelFile, getTableDatasFromExcel } from '../tools';
 // type FilteredDataMap = Map<string, TableDataRowNameList[]>;
 
 const ONLY_MATCH_PHONE: boolean = true;
-const SKIP_ROWS: number = 8;
+const SKIP_ROWS: number = 2;
 const WEEK_SCORE_COL: { [key in keyof EnumColumns]: string; } = {
-  Name: 'B', // 姓名
-  Phone: 'D', // 手机
-  Score: 'F', // 得分
-  Pass: 'G', // 是否通过
-  Time: 'H', // 交卷时间
-  Duration: 'I', // 考试用时
+  Name: 'C', // 姓名
+  Phone: 'E', // 手机
+  Score: 'L', // 得分
+  Pass: 'M', // 是否通过
+  Time: 'I', // 交卷时间
+  Duration: 'K', // 考试用时
   Code: '', // 员工编码
   Major: '', // 所属专业
-  Unit: 'E', // 所在单位
+  Unit: '', // 所在单位
 };
 
 interface IProps {
