@@ -182,8 +182,8 @@ interface GenerateSheetDataReturnType {
 // 构造表数据
 export const generateSheetData = (workbook: WorkBook, sheetName: string = workbook.SheetNames[0]): GenerateSheetDataReturnType  => {
   const sheet = workbook.Sheets[sheetName];
-  const ref: string = sheet?.['!autofilter']?.ref ?? sheet?.['!ref'] ?? '';
-
+  // const ref: string = sheet?.['!autofilter']?.ref ?? sheet?.['!ref'] ?? '';
+  const ref: string = sheet?.['!ref'] ?? '';
   // 空表
   if (!ref) {
     return {
