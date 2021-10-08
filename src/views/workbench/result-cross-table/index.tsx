@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useImperativeHandle, useRef } from 'react';
 import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../index-types';
-import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input } from 'antd';
+import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input, Space } from 'antd';
 // import Input from '@/components/del-input';
 import { UploadFile } from 'antd/lib/upload/interface';
 import { UploadOutlined, DownloadOutlined, SelectOutlined, SettingOutlined, ClearOutlined } from '@ant-design/icons';
@@ -25,6 +25,7 @@ import { exportExcelFile, getTableDatasFromExcel } from '../tools';
 // import DelVirtualTable from '@/components/del-virtual-table';
 // type FilteredDataMap = Map<string, TableDataRowNameList[]>;
 import { useLocalStorage } from 'react-use';
+import ColumnConfig from '@/views/components/column-config';
 
 const ONLY_MATCH_PHONE: boolean = true;
 const SKIP_ROWS: number = 2;
@@ -531,19 +532,22 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
                   </Upload>
                   
                   {/* 委外通讯录 */}
-                  <Upload
-                    disabled={!!namesFileListB.length}
-                    accept=".xlsx, .xls"
-                    fileList={namesFileListC}
-                    beforeUpload={() => false}
-                    className="upload"
-                    onChange={ev => {
-                      const fileList: UploadFile[] = ev.fileList.slice(-1);
-                      setNamesFileListC(fileList);
-                    }}
-                  >
-                    <Button disabled={!!namesFileListB.length} size="small" icon={<UploadOutlined />}>选择委外通讯录</Button>
-                  </Upload>
+                  <div className="row">
+                    <ColumnConfig />
+                    <Upload
+                      disabled={!!namesFileListB.length}
+                      accept=".xlsx, .xls"
+                      fileList={namesFileListC}
+                      beforeUpload={() => false}
+                      className="upload"
+                      onChange={ev => {
+                        const fileList: UploadFile[] = ev.fileList.slice(-1);
+                        setNamesFileListC(fileList);
+                      }}
+                    >
+                      <Button disabled={!!namesFileListB.length} size="small" icon={<UploadOutlined />}>选择委外通讯录</Button>
+                    </Upload>
+                  </div>
 
                   {/* 委外花名册 */}
                   <Upload

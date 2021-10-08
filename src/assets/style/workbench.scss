@@ -254,7 +254,20 @@ $transition-height: height 200ms;
     }
 
     &-uploads-box {
-      width: 300px;
+      width: 400px;
+
+      .row {
+        display: flex;
+        
+        >:first-child {
+          margin-right: 10px;
+          flex-shrink: 0;
+        }
+        >:last-child {
+          flex: 1;
+          overflow: hidden;
+        }
+      }
 
       .upload {
         display: flex;

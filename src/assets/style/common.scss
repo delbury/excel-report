@@ -10,6 +10,18 @@
 .mg-b-10 {
   margin-bottom: 10px !important;
 }
+.mg-l-20 {
+  margin-left: 20px !important;
+}
+.mg-r-20 {
+  margin-right: 20px !important;
+}
+.mg-t-20 {
+  margin-top: 20px !important;
+}
+.mg-b-20 {
+  margin-bottom: 20px !important;
+}
 
 .pd-l-10 {
   padding-left: 10px !important;
@@ -37,13 +49,25 @@
 }
 .flex-h {
   display: flex;
+  flex-direction: row;
+}
+.flex-v.center {
+  justify-content: center;
+}
+.flex-h.center {
+  align-items: center;
 }
 .flex-h-sb {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
 }
 .flex-half {
   flex: 1 1 50%;
+  
+  ~.flex-half {
+    margin-left: 20px;
+  }
 }
 .flex-fill {
   flex: 1;
@@ -58,8 +82,12 @@
   width: 6em;
 }
 .row {
+  min-height: 24px;
   &~.row {
     margin-top: 10px;
+  }
+  >*:not(:last-child) {
+    margin-right: 10px;
   }
 }
 
@@ -84,3 +112,4 @@
 .cna {
   cursor: not-allowed;
 }
+
