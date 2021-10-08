@@ -3,7 +3,7 @@ import { TableColumns, TableDataRow, TableColumnsMap, ColumnsType } from '../ind
 import { Button, Tooltip, Table, Upload, Badge, message, Radio, Popover, Select, Input } from 'antd';
 // import Input from '@/components/del-input';
 import { UploadFile } from 'antd/lib/upload/interface';
-import { UploadOutlined, DownloadOutlined, SelectOutlined, SettingOutlined } from '@ant-design/icons';
+import { UploadOutlined, DownloadOutlined, SelectOutlined, SettingOutlined, ClearOutlined } from '@ant-design/icons';
 import { TableDataRowNameList, TableDataRowNameListMerged } from './columns-types';
 import { getColumnsNameList, columnsNameListMerged } from './columns';
 import { sheetFieldMap } from './sheet-fields-map';
@@ -24,6 +24,7 @@ import { EnumTimes, enumColumns, EnumColumns } from './enums';
 import { exportExcelFile, getTableDatasFromExcel } from '../tools';
 // import DelVirtualTable from '@/components/del-virtual-table';
 // type FilteredDataMap = Map<string, TableDataRowNameList[]>;
+import { useLocalStorage } from 'react-use';
 
 const ONLY_MATCH_PHONE: boolean = true;
 const SKIP_ROWS: number = 2;
@@ -53,8 +54,11 @@ interface SeparatedDataType {
 }
 
 const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref) => {
-  const [tableDataNameList, setTableDataNameList] = useState<TableDataRowNameList[]>([]); // 数据列表
-  const [filteredNameList, setFilteredNameList] = useState<TableDataRowNameList[]>([]); // 搜索过滤后的数据列表
+  // 本地保存的名单数据
+  const [localNameList, setLocalNameList] = useLocalStorage<TableDataRowNameList[]>('nameList', []);
+
+  const [tableDataNameList, setTableDataNameList] = useState<TableDataRowNameList[]>(localNameList ?? []); // 数据列表
+  const [filteredNameList, setFilteredNameList] = useState<TableDataRowNameList[]>(tableDataNameList); // 搜索过滤后的数据列表
   // const [filteredDataMap, setFilteredDataMap] = useState<FilteredDataMap>(new Map());
   const [fileList, setFileList] = useState<UploadFile[]>([]); // 成绩文件列表
   const [timesScores, setTimesScores] = useState<EnumTimes>(EnumTimes.First); // 第几次提交
@@ -162,6 +166,9 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
       }
       // setFilteredDataMap(tempFilteredDataMap);
       handleFilterNameList(list);
+      setLocalNameList(list);
+
+      // 生成单位的查询条件选择项
       const selectOptions: { label: string; value: string }[] = [];
       for (let name of unitNameSet.keys()) {
         selectOptions.push({ label: name, value: name });
@@ -171,6 +178,18 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
     }, 0);
 
   };
+
+  // 根据列表生成单位的查询条件选择项
+  const getSelectOptions = (list: TableDataRowNameList[]) => {
+    const set: Set<string> = new Set();
+    list.forEach(it => set.add(it.unitName));
+    setUnitNameSelectOptions((Array.from(set)).map(it => ({ label: it, value: it })));
+  };
+  useEffect(() => {
+    if (filteredNameList.length) {
+      getSelectOptions(filteredNameList);
+    }
+  }, []);
 
   // 确认导入
   const resolveScoreExcelFiles = async () => {
@@ -540,6 +559,17 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
                   >
                     <Button disabled={!!namesFileListC.length} size="small" icon={<UploadOutlined />}>选择委外花名册</Button>
                   </Upload>
+
+                  {/* 清除缓存 */}
+                  <Button
+                    danger
+                    size="small"
+                    icon={<ClearOutlined />}
+                    onClick={() => {
+                      setLocalNameList([]);
+                      message.success('清除成功');
+                    }}
+                  >清除名单缓存</Button>
                 </div>
               }>
               
@@ -834,6 +864,8 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
               <span className="mg-r-10">{ `当前条数 / 总条数：${filteredNameList.length} / ${tableDataNameList.length}` }</span>
             ),
             size: 'default',
+            // onChange: (page, size) => console.log(page, size),
+            // onShowSizeChange: (page, size) => console.log(page, size)
           }}
           scroll={{ x: 'max-content' }}
           sticky
