@@ -1,4 +1,22 @@
 import { ExternalParamsMap } from './columns-types';
+import { ConfigProp } from '@/views/components/column-config/interface';
+
+export const thirdUnitConfig: ConfigProp = {
+  unitName: {
+    value: 'A',
+    formatEnable: true,
+    separator: '-',
+    index: 0
+  },
+  name: {
+    value: 'A',
+    formatEnable: true,
+    separator: '-',
+    index: 1
+  },
+  phone: 'G',
+  station: 'D',
+};
 
 export const sheetFieldMap: Map<string, ExternalParamsMap> = new Map([
   // ['车间', {

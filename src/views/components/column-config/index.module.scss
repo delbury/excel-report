@@ -3,3 +3,14 @@
   grid-template-columns: 1fr 1fr;
   gap: 30px 30px;
 }
+
+.required {
+  position: relative;
+  &::before {
+    position: absolute;
+    left: -0.75em;
+    display: block;
+    content: "*";
+    color: red;
+  }
+}

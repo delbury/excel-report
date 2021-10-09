@@ -6,7 +6,7 @@ import { UploadFile } from 'antd/lib/upload/interface';
 import { UploadOutlined, DownloadOutlined, SelectOutlined, SettingOutlined, ClearOutlined } from '@ant-design/icons';
 import { TableDataRowNameList, TableDataRowNameListMerged } from './columns-types';
 import { getColumnsNameList, columnsNameListMerged } from './columns';
-import { sheetFieldMap } from './sheet-fields-map';
+import { sheetFieldMap, thirdUnitConfig } from './sheet-fields-map';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import { actions } from '@/redux/actions/global';
@@ -533,7 +533,7 @@ const ResultCrossTable = React.forwardRef<RefProps, IProps>((props: IProps, ref)
                   
                   {/* 委外通讯录 */}
                   <div className="row">
-                    <ColumnConfig />
+                    <ColumnConfig initConfig={thirdUnitConfig} />
                     <Upload
                       disabled={!!namesFileListB.length}
                       accept=".xlsx, .xls"
